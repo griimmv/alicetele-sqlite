@@ -13,14 +13,15 @@ async function main() {
   const bot = getBot();
   registerHandlers(bot);
 
+  // parses json from telegram
   const app = express();
   app.use(express.json());
   app.use("/api", webhookRouter);
 
-  const webhookUrl = process.env.WEBHOOK_URL;
+  const webhookUrl = config.webhookUrl;
   if (webhookUrl) {
     const fullUrl = `${webhookUrl.replace(/\/$/, "")}/api/webhook`;
-    await setWebhook(fullUrl);
+    await setWebhook(fullUrl, config.webhookSecret);
     console.log(`Webhook set to ${fullUrl}`);
   } else {
     console.log("No WEBHOOK_URL set. Skipping webhook registration.");
