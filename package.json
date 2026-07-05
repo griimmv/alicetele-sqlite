@@ -4,11 +4,11 @@
   "description": "Telegram bot that fetches Wikipedia articles via LLM",
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "bun run scripts/dev.ts",
     "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
     "typecheck": "tsc --noEmit",
-    "postinstall": "bun run scripts/init-env.ts"
+    "init-env": "bun run scripts/init-env.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.48",
