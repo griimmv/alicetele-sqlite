@@ -13,7 +13,7 @@ export const config = {
   botToken: process.env.BOT_TOKEN!,
   openaiApiKey: process.env.OPENAI_API_KEY!,
   databaseUrl: process.env.DATABASE_URL!,
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT)!,
   openaiModel: process.env.OPENAI_MODEL || "gpt-5.4-mini",
   webhookUrl: process.env.WEBHOOK_URL || undefined,
   webhookSecret: process.env.WEBHOOK_SECRET || undefined,

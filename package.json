@@ -7,7 +7,8 @@
     "dev": "bun --watch src/index.ts",
     "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "bun run scripts/init-env.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.48",
