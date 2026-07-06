@@ -33,10 +33,11 @@ async function main() {
   if (existingUrl) {
     console.log(`ngrok: ${existingUrl}`);
     process.env.WEBHOOK_URL = existingUrl;
-    const { exitCode } = spawn(["bun", "--watch", "src/index.ts"], {
+    const bot = spawn(["bun", "--watch", "src/index.ts"], {
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
     });
+    const exitCode = await bot.exited;
     process.exit(exitCode ?? 0);
   }
 
