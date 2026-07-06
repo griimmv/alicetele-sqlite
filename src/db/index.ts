@@ -66,7 +66,7 @@ export async function initDB(): Promise<void> {
   db.run("CREATE INDEX IF NOT EXISTS idx_sessions_chat ON sessions(chat_id, archived)");
   db.run("CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, turn_index)");
 }
-
+// Returns the active session for a chat, or creates one if none exists.
 export async function getOrCreateSession(chatId: number): Promise<SessionRow> {
   if (!db) throw new Error("DB not initialized");
   const row = db.query(
@@ -78,7 +78,7 @@ export async function getOrCreateSession(chatId: number): Promise<SessionRow> {
     "INSERT INTO sessions (name, chat_id, archived) VALUES ('default', ?, 0)",
     [chatId]
   );
-  return { id: Number(result.lastInsertRowid), name: "default", chat_id: chatId, archived: 0, created_at: new Date().toISOString() };
+  return db.query("SELECT * FROM sessions WHERE id = ?").get(Number(result.lastInsertRowid)) as SessionRow;
 }
 
 export async function archiveSession(chatId: number): Promise<SessionRow> {
