@@ -17,3 +17,9 @@ export const config = {
   webhookUrl: process.env.WEBHOOK_URL || undefined,
   webhookSecret: process.env.WEBHOOK_SECRET || undefined,
 } as const;
+
+if (config.webhookUrl && !config.webhookSecret) {
+  throw new Error(
+    "WEBHOOK_SECRET is required when WEBHOOK_URL is configured",
+  );
+}
