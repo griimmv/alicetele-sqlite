@@ -133,6 +133,44 @@ export async function saveTurn(
   );
 }
 
+export async function getActiveSession(chatId: number): Promise<SessionRow | null> {
+  if (!db) return null;
+  return db.query(
+    "SELECT * FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1"
+  ).get(chatId) as SessionRow | null;
+}
+
+export async function listSessions(chatId: number): Promise<SessionRow[]> {
+  if (!db) throw new Error("DB not initialized");
+  return db.query(
+    "SELECT * FROM sessions WHERE chat_id = ? ORDER BY created_at DESC"
+  ).all(chatId) as SessionRow[];
+}
+
+export async function getSession(sessionId: number): Promise<SessionRow | null> {
+  if (!db) throw new Error("DB not initialized");
+  return db.query("SELECT * FROM sessions WHERE id = ?").get(sessionId) as SessionRow | null;
+}
+
+export async function switchSession(sessionId: number): Promise<SessionRow> {
+  if (!db) throw new Error("DB not initialized");
+  const session = await getSession(sessionId);
+  if (!session) throw new Error(`Session ${sessionId} not found`);
+  db.run("UPDATE sessions SET archived = 1 WHERE chat_id = ? AND archived = 0", [session.chat_id]);
+  db.run("UPDATE sessions SET archived = 0 WHERE id = ?", [sessionId]);
+  return db.query("SELECT * FROM sessions WHERE id = ?").get(sessionId) as SessionRow;
+}
+
+export async function renameSession(sessionId: number, name: string): Promise<void> {
+  if (!db) throw new Error("DB not initialized");
+  db.run("UPDATE sessions SET name = ? WHERE id = ?", [name, sessionId]);
+}
+
+export async function deleteSession(sessionId: number): Promise<void> {
+  if (!db) throw new Error("DB not initialized");
+  db.run("DELETE FROM sessions WHERE id = ?", [sessionId]);
+}
+
 export async function closeDB(): Promise<void> {
   if (db) {
     db.close();

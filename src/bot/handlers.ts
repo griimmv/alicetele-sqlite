@@ -1,8 +1,9 @@
 import { Bot, InputFile } from "grammy";
 import { createAgent, runAgent } from "../engine/agent.ts";
 import { createLLM } from "../engine/llm.ts";
-import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn } from "../db/index.ts";
+import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession } from "../db/index.ts";
 import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
+import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
 
 interface ParsedResponse {
   summary?: string;
@@ -32,6 +33,8 @@ export function registerHandlers(bot: Bot): void {
     await ctx.reply(
       "/help - Show this message\n"
       + "/end - End current session and start fresh\n"
+      + "/sessions - Manage sessions (switch, create, delete)\n"
+      + "/rename <name> - Rename the current session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
     );
@@ -89,6 +92,28 @@ export function registerHandlers(bot: Bot): void {
       { caption: fromIndex !== undefined ? `Exported from turn ${fromIndex} (${turns[0].query.slice(0, 40)}...)` : "Full session export" }
     );
   });
+
+  bot.command("sessions", async (ctx) => {
+    await showSessionManager(ctx);
+  });
+
+  bot.command("rename", async (ctx) => {
+    const chatId = ctx.chat.id;
+    const name = ctx.match?.trim();
+    if (!name) {
+      await ctx.reply("Usage: /rename <new name>");
+      return;
+    }
+    const session = await getActiveSession(chatId);
+    if (!session) {
+      await ctx.reply("No active session to rename.");
+      return;
+    }
+    await renameSession(session.id, name);
+    await ctx.reply(`✅ Renamed to "${name}".`);
+  });
+
+  registerSessionCallbacks(bot);
 
   bot.on("message:text", async (ctx) => {
     const chatId = ctx.chat.id;
