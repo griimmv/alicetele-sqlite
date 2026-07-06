@@ -12,12 +12,12 @@ export function getBot(): Bot {
 export function getWebhookHandler(): Handler {
   if (!webhookHandler) {
     webhookHandler = webhookCallback(bot, "express", {
-      secretToken: undefined,
+      secretToken: config.webhookSecret,
     });
   }
   return webhookHandler;
 }
 
-export async function setWebhook(url: string): Promise<void> {
-  await bot.api.setWebhook(url);
+export async function setWebhook(url: string, secret?: string): Promise<void> {
+  await bot.api.setWebhook(url, { secret_token: secret });
 }

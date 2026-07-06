@@ -1,24 +1,24 @@
 CREATE TABLE IF NOT EXISTS sessions (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  name       VARCHAR(255) NOT NULL DEFAULT 'default',
-  chat_id    BIGINT NOT NULL,
-  archived   TINYINT(1) NOT NULL DEFAULT 0,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT NOT NULL DEFAULT 'default',
+  chat_id    INTEGER NOT NULL,
+  archived   INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS turns (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  session_id    INT NOT NULL,
-  turn_index    INT NOT NULL,
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id    INTEGER NOT NULL,
+  turn_index    INTEGER NOT NULL,
   query         TEXT NOT NULL DEFAULT '',
   summary       TEXT,
   quotes        TEXT,
   sources       TEXT,
   raw           TEXT,
   error         TEXT,
-  input_tokens  INT NOT NULL DEFAULT 0,
-  output_tokens INT NOT NULL DEFAULT 0,
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );
 
