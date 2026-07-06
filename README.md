@@ -1,14 +1,15 @@
-# AliceWiki Telegram Bot
+# AliceWiki Telegram Bot (SQLite)
 
 A Telegram bot that fetches Wikipedia articles via LLM. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), and [Bun](https://bun.sh).
 
 ## Requirements
 
 - **Bun** >= 1.0 — Runtime (install: `curl -fsSL https://bun.sh/install | bash`)
-- **MySQL** >= 8.0 — Database (local, Docker, or managed like PlanetScale / Aiven)
 - **ngrok** — Public HTTPS tunnel for local development ([ngrok.com](https://ngrok.com/download))
 - **Telegram Bot Token** — From [@BotFather](https://t.me/botfather)
 - **OpenAI API Key** — From [platform.openai.com](https://platform.openai.com/api-keys)
+
+No MySQL needed — uses SQLite via Bun's built-in `bun:sqlite`.
 
 ## Installation
 
@@ -20,41 +21,31 @@ bun install
 # 2. Generate .env.local with a WEBHOOK_SECRET
 bun run init-env
 
-# 3. Create the MySQL database
-mysql -u root -e "CREATE DATABASE alicewiki"
-
-# 4. Set up a MySQL user (example: root with empty password)
-mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY ''; FLUSH PRIVILEGES;"
-
-# 5. Edit .env.local with your credentials
+# 3. Edit .env.local with your credentials
 #    BOT_TOKEN=your_token_from_botfather
 #    OPENAI_API_KEY=sk-proj-...
-#    DATABASE_URL=mysql://root:@localhost:3306/alicewiki
 
-# 6. Authenticate ngrok (free account required)
+# 4. Authenticate ngrok (free account required)
 ngrok config add-authtoken <your_token>
 
-# 7. Start the bot (auto-starts ngrok + registers webhook)
+# 5. Start the bot (auto-starts ngrok + registers webhook + creates DB)
 bun run dev
 ```
 
 ### Production deployment
 
 ```bash
-# Set WEBHOOK_URL to your public domain (no ngrok needed)
-# Then run:
+# Set WEBHOOK_URL to your public domain, then:
 bun run start
 ```
 
 ## Configuration
 
-All configuration is via environment variables. Create `.env.local` (or set these in your deployment environment).
-
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `BOT_TOKEN` | Yes | — | Telegram bot token from [@BotFather](https://t.me/botfather) |
 | `OPENAI_API_KEY` | Yes | — | OpenAI API key |
-| `DATABASE_URL` | Yes | — | MySQL connection string (`mysql://user:pass@host:3306/db`) |
+| `DATABASE_PATH` | No | `./data/alicewiki.db` | Path to SQLite database file |
 | `PORT` | No | `3000` | Port for the Express server |
 | `OPENAI_MODEL` | No | `gpt-5.4-mini` | OpenAI model name |
 | `WEBHOOK_URL` | No | — | Public HTTPS URL for Telegram webhook (auto-set by `bun run dev`) |
@@ -76,7 +67,7 @@ All configuration is via environment variables. Create `.env.local` (or set thes
 src/
 ├── index.ts              Entry point — Express server, webhook registration, app bootstrap
 ├── lib/
-│   └── config.ts         Env var loading and validation (Zod-free, manual validation)
+│   └── config.ts         Env var loading and validation
 ├── bot/
 │   ├── client.ts         Grammy Bot instance, webhook callback handler, setWebhook()
 │   ├── handlers.ts       Telegram command and message handlers (/start, /help, /end, /export, text)
@@ -84,8 +75,8 @@ src/
 ├── routes/
 │   └── webhook.ts        Express router — POST /api/webhook
 ├── db/
-│   ├── index.ts          MySQL connection pool, session/turn CRUD, auto-migration (CREATE TABLE IF NOT EXISTS)
-│   └── schema.sql        Reference SQL schema (matched by db/index.ts)
+│   ├── index.ts          SQLite via bun:sqlite — init, session/turn CRUD, auto-migration
+│   └── schema.sql        Reference SQL schema
 └── engine/
     ├── agent.ts          LLM agent loop — invokes LLM with tools, retry logic, timeout handling
     ├── llm.ts            ChatOpenAI instantiation
@@ -104,7 +95,7 @@ Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                                             │
                                               ┌───────────────┴───────────────┐
                                               │                               │
-                                    getOrCreateSession(session)         runAgent(query)
+                                    getOrCreateSession()               runAgent()
                                               │                               │
                                         saveTurn()                    LangChain + OpenAI
                                                                               │
@@ -112,7 +103,9 @@ Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                                                         (fetch + search)
 ```
 
-### Database schema
+### Database
+
+SQLite file stored at `DATABASE_PATH` (default: `./data/alicewiki.db`). Tables are auto-created on first run.
 
 ```sql
 sessions: id | name | chat_id | archived | created_at

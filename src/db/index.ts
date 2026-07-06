@@ -1,7 +1,9 @@
-import mysql from "mysql2/promise";
+import { Database } from "bun:sqlite";
+import { mkdirSync, existsSync } from "fs";
+import { dirname, resolve } from "path";
 import { config } from "../lib/config.ts";
 
-let pool: mysql.Pool | null = null;
+let db: Database | null = null;
 
 export interface SessionRow {
   id: number;
@@ -27,74 +29,75 @@ export interface TurnRow {
 }
 
 export async function initDB(): Promise<void> {
-  pool = mysql.createPool(config.databaseUrl);
-  const connection = await pool.getConnection();
-  try {
-    await connection.query(`CREATE TABLE IF NOT EXISTS sessions (
-      id         INT AUTO_INCREMENT PRIMARY KEY,
-      name       VARCHAR(255) NOT NULL DEFAULT 'default',
-      chat_id    BIGINT NOT NULL,
-      archived   TINYINT(1) NOT NULL DEFAULT 0,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`);
-    await connection.query(`CREATE TABLE IF NOT EXISTS turns (
-      id            INT AUTO_INCREMENT PRIMARY KEY,
-      session_id    INT NOT NULL,
-      turn_index    INT NOT NULL,
-      query         TEXT NOT NULL DEFAULT '',
-      summary       TEXT,
-      quotes        TEXT,
-      sources       TEXT,
-      raw           TEXT,
-      error         TEXT,
-      input_tokens  INT NOT NULL DEFAULT 0,
-      output_tokens INT NOT NULL DEFAULT 0,
-      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-    )`);
-    await connection.query("CREATE INDEX IF NOT EXISTS idx_sessions_chat ON sessions(chat_id, archived)");
-    await connection.query("CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, turn_index)");
-  } finally {
-    connection.release();
+  const dbPath = resolve(config.databasePath);
+  const dir = dirname(dbPath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
   }
+
+  db = new Database(dbPath);
+  db.run("PRAGMA journal_mode=WAL");
+  db.run("PRAGMA foreign_keys=ON");
+
+  db.run(`CREATE TABLE IF NOT EXISTS sessions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL DEFAULT 'default',
+    chat_id    INTEGER NOT NULL,
+    archived   INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS turns (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id    INTEGER NOT NULL,
+    turn_index    INTEGER NOT NULL,
+    query         TEXT NOT NULL DEFAULT '',
+    summary       TEXT,
+    quotes        TEXT,
+    sources       TEXT,
+    raw           TEXT,
+    error         TEXT,
+    input_tokens  INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+  )`);
+
+  db.run("CREATE INDEX IF NOT EXISTS idx_sessions_chat ON sessions(chat_id, archived)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, turn_index)");
 }
 
 export async function getOrCreateSession(chatId: number): Promise<SessionRow> {
-  if (!pool) throw new Error("DB not initialized");
-  const [rows] = await pool.execute<mysql.RowDataPacket[]>(
-    "SELECT * FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1",
-    [chatId]
-  );
-  if (rows.length > 0) return rows[0] as SessionRow;
-  const [result] = await pool.execute(
+  if (!db) throw new Error("DB not initialized");
+  const row = db.query(
+    "SELECT * FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1"
+  ).get(chatId) as SessionRow | null;
+  if (row) return row;
+
+  const result = db.run(
     "INSERT INTO sessions (name, chat_id, archived) VALUES ('default', ?, 0)",
     [chatId]
   );
-  const insertId = (result as mysql.ResultSetHeader).insertId;
-  return { id: insertId, name: "default", chat_id: chatId, archived: 0, created_at: new Date().toISOString() };
+  return { id: Number(result.lastInsertRowid), name: "default", chat_id: chatId, archived: 0, created_at: new Date().toISOString() };
 }
 
 export async function archiveSession(chatId: number): Promise<SessionRow> {
-  if (!pool) throw new Error("DB not initialized");
+  if (!db) throw new Error("DB not initialized");
   const session = await getOrCreateSession(chatId);
-  await pool.execute("UPDATE sessions SET archived = 1 WHERE id = ?", [session.id]);
+  db.run("UPDATE sessions SET archived = 1 WHERE id = ?", [session.id]);
   return getOrCreateSession(chatId);
 }
 
 export async function getSessionTurns(sessionId: number, fromIndex?: number): Promise<TurnRow[]> {
-  if (!pool) throw new Error("DB not initialized");
+  if (!db) throw new Error("DB not initialized");
   if (fromIndex !== undefined) {
-    const [rows] = await pool.execute<mysql.RowDataPacket[]>(
-      "SELECT * FROM turns WHERE session_id = ? AND turn_index >= ? ORDER BY turn_index ASC",
-      [sessionId, fromIndex]
-    );
-    return rows as TurnRow[];
+    return db.query(
+      "SELECT * FROM turns WHERE session_id = ? AND turn_index >= ? ORDER BY turn_index ASC"
+    ).all(sessionId, fromIndex) as TurnRow[];
   }
-  const [rows] = await pool.execute<mysql.RowDataPacket[]>(
-    "SELECT * FROM turns WHERE session_id = ? ORDER BY turn_index ASC",
-    [sessionId]
-  );
-  return rows as TurnRow[];
+  return db.query(
+    "SELECT * FROM turns WHERE session_id = ? ORDER BY turn_index ASC"
+  ).all(sessionId) as TurnRow[];
 }
 
 export async function saveTurn(
@@ -111,8 +114,8 @@ export async function saveTurn(
     outputTokens?: number;
   }
 ): Promise<void> {
-  if (!pool) throw new Error("DB not initialized");
-  await pool.execute(
+  if (!db) throw new Error("DB not initialized");
+  db.run(
     `INSERT INTO turns (session_id, turn_index, query, summary, quotes, sources, raw, error, input_tokens, output_tokens)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -131,8 +134,8 @@ export async function saveTurn(
 }
 
 export async function closeDB(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
+  if (db) {
+    db.close();
+    db = null;
   }
 }

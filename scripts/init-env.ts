@@ -42,13 +42,13 @@ function main() {
   writeFileSync(ENV_PATH, [
     "BOT_TOKEN=",
     "OPENAI_API_KEY=",
-    "DATABASE_URL=",
+    "DATABASE_PATH=./data/alicewiki.db",
     "PORT=3000",
     `WEBHOOK_SECRET=${secret}`,
     "",
   ].join("\n"));
   console.log("Created .env.local with a generated WEBHOOK_SECRET.");
-  console.log("Fill in BOT_TOKEN, OPENAI_API_KEY, and DATABASE_URL to get started.");
+  console.log("Fill in BOT_TOKEN and OPENAI_API_KEY to get started.");
 }
 
 main();
