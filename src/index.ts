@@ -13,7 +13,6 @@ async function main() {
   const bot = getBot();
   registerHandlers(bot);
 
-  // parses json from telegram
   const app = express();
   app.use(express.json());
   app.use("/api", webhookRouter);

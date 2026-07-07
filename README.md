@@ -4,18 +4,16 @@ A Telegram bot that fetches Wikipedia articles via LLM. Built with [Grammy](http
 
 ## Requirements
 
-- **Bun** >= 1.0 — Runtime (install: `curl -fsSL https://bun.sh/install | bash`)
-- **ngrok** — Public HTTPS tunnel for local development ([ngrok.com](https://ngrok.com/download))
-- **Telegram Bot Token** — From [@BotFather](https://t.me/botfather)
-- **OpenAI API Key** — From [platform.openai.com](https://platform.openai.com/api-keys)
-
-No MySQL needed — uses SQLite via Bun's built-in `bun:sqlite`.
+- **Bun** >= 1.0 
+- **Telegram Bot Token** 
+- **OpenAI API Key** 
+- **ngrok** (optional, for local development)
 
 ## Installation
 
 ```bash
 # 1. Clone and install dependencies
-git clone <repo-url> && cd alicewiki-telegram
+git clone https://github.com/griimmv/alicetele-sqlite.git && cd alicetele-sqlite
 bun install
 
 # 2. Generate .env.local with a WEBHOOK_SECRET
@@ -64,6 +62,9 @@ bun run start
 ## Architecture
 
 ```
+scripts/
+├── dev.ts                ngrok tunnel launcher + spawns bot with --watch (local dev)
+└── init-env.ts           Generate .env.local with WEBHOOK_SECRET
 src/
 ├── index.ts              Entry point — Express server, webhook registration, app bootstrap
 ├── lib/
@@ -86,21 +87,33 @@ src/
 
 ### Data flow
 
-```
+**Development** (ngrok provides the HTTPS tunnel):
+
+```text
 Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                   │
                                   └── /api/webhook ──> Grammy webhookCallback
                                                             │
                                                     bot.on("message:text")
                                                             │
-                                              ┌───────────────┴───────────────┐
-                                              │                               │
+                                            ┌───────────────┴───────────────┐
+                                            │                               │
                                     getOrCreateSession()               runAgent()
-                                              │                               │
-                                        saveTurn()                    LangChain + OpenAI
-                                                                              │
+                                            │                               │
+                                        saveTurn()                  LangChain + OpenAI
+                                                                            │
                                                                       wikipediaTool
-                                                                        (fetch + search)
+                                                                    (fetch + search)
+```
+
+**Production** (traffic goes directly to your server):
+
+```text
+Telegram ──HTTPS──> your-server.com ──> Express (port 3000)
+                                               │
+                                               └── /api/webhook ──> Grammy webhookCallback
+                                                                         │
+                                                                   (same flow as above)
 ```
 
 ### Database
