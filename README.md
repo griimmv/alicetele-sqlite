@@ -52,7 +52,7 @@ bun run start
 ## Scripts
 
 | Command | Description |
-|---|---|---|
+|---|---|
 | `bun run dev` | Start ngrok tunnel + run bot with file watching (local development) |
 | `bun run start` | Run bot in production (expects `WEBHOOK_URL` from environment) |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
@@ -89,7 +89,7 @@ src/
 
 **Development** (ngrok provides the HTTPS tunnel):
 
-```
+```text
 Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                   │
                                   └── /api/webhook ──> Grammy webhookCallback
@@ -108,7 +108,7 @@ Telegram ──HTTPS──> ngrok ──> Express (port 3000)
 
 **Production** (traffic goes directly to your server):
 
-```
+```text
 Telegram ──HTTPS──> your-server.com ──> Express (port 3000)
                                                │
                                                └── /api/webhook ──> Grammy webhookCallback
