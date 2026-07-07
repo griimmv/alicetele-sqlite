@@ -5,6 +5,7 @@ import {
   getSession,
   getSessionTurns,
   getOrCreateSession,
+  archiveSession,
   switchSession as switchDbSession,
   deleteSession as deleteDbSession,
 } from "../db/index.ts";
@@ -148,8 +149,8 @@ async function handleSwitch(ctx: Context, chatId: number, msgId: number, session
 }
 
 async function handleNew(ctx: Context, chatId: number, msgId: number) {
-  const session = await getOrCreateSession(chatId);
-  const text = `✅ New session "#${session.id}: ${session.name}" created.`;
+  const session = await archiveSession(chatId);
+  const text = `Session ended. New session "#${session.id}: ${session.name}" started.`;
   const sessions = await listSessions(chatId);
   const state = getState(chatId, msgId);
   state.page = 1;
