@@ -52,7 +52,7 @@ bun run start
 ## Scripts
 
 | Command | Description |
-|---|---|
+|---|---|---|
 | `bun run dev` | Start ngrok tunnel + run bot with file watching (local development) |
 | `bun run start` | Run bot in production (expects `WEBHOOK_URL` from environment) |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
@@ -62,6 +62,9 @@ bun run start
 ## Architecture
 
 ```
+scripts/
+├── dev.ts                ngrok tunnel launcher + spawns bot with --watch (local dev)
+└── init-env.ts           Generate .env.local with WEBHOOK_SECRET
 src/
 ├── index.ts              Entry point — Express server, webhook registration, app bootstrap
 ├── lib/
@@ -84,6 +87,8 @@ src/
 
 ### Data flow
 
+**Development** (ngrok provides the HTTPS tunnel):
+
 ```
 Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                   │
@@ -99,6 +104,16 @@ Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                                                             │
                                                                       wikipediaTool
                                                                     (fetch + search)
+```
+
+**Production** (traffic goes directly to your server):
+
+```
+Telegram ──HTTPS──> your-server.com ──> Express (port 3000)
+                                               │
+                                               └── /api/webhook ──> Grammy webhookCallback
+                                                                         │
+                                                                   (same flow as above)
 ```
 
 ### Database

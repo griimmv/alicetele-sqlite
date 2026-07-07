@@ -1,6 +1,7 @@
 import { $, spawn } from "bun";
 import { randomBytes } from "crypto";
 
+// ngrok's endpoint to get tunnel connection and domain
 const NGROK_API = "http://127.0.0.1:4040/api/tunnels";
 
 async function getNgrokUrl(): Promise<string | null> {
