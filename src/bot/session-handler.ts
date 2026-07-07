@@ -1,4 +1,4 @@
-import { Bot, Context, InlineKeyboard } from "grammy";
+import { Bot, Context, GrammyError, InlineKeyboard } from "grammy";
 import type { SessionRow, TurnRow } from "../db/index.ts";
 import {
   listSessions,
@@ -101,6 +101,13 @@ function formatTurns(turns: TurnRow[]): string {
   return text;
 }
 
+function isBenignEditError(err: unknown): boolean {
+  return err instanceof GrammyError && err.error_code === 400 && (
+    err.description.includes("message to edit not found") ||
+    err.description.includes("message is not modified")
+  );
+}
+
 async function editManager(
   ctx: Context,
   chatId: number,
@@ -112,9 +119,31 @@ async function editManager(
   state.text = text;
   try {
     await ctx.editMessageText(text, { reply_markup: keyboard });
-  } catch {
-    // message may be too old to edit; ignore
+  } catch (err) {
+    if (!isBenignEditError(err)) console.error("editManager error:", err);
   }
+}
+
+/** Refresh the session-manager keyboard without changing the text. */
+async function refreshKeyboard(
+  ctx: Context,
+  chatId: number,
+  msgId: number,
+  mode: "normal" | "delete",
+  page?: number,
+): Promise<void> {
+  const sessions = await listSessions(chatId);
+  const active = sessions.find(s => !s.archived);
+  const state = getState(chatId, msgId);
+  state.mode = mode;
+  if (page !== undefined) state.page = page;
+  const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, mode);
+  try {
+    await ctx.editMessageReplyMarkup({ reply_markup: kb });
+  } catch (err) {
+    if (!isBenignEditError(err)) console.error("refreshKeyboard error:", err);
+  }
+  await ctx.answerCallbackQuery();
 }
 
 // --- Callback handlers ---
@@ -161,27 +190,12 @@ async function handleNew(ctx: Context, chatId: number, msgId: number) {
 }
 
 async function handlePage(ctx: Context, chatId: number, msgId: number, page: number) {
-  const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
   const state = getState(chatId, msgId);
-  state.page = page;
-  const kb = buildSessionKeyboard(sessions, active?.id ?? null, page, state.mode);
-  try {
-    await ctx.editMessageReplyMarkup({ reply_markup: kb });
-  } catch { /* ignore */ }
-  await ctx.answerCallbackQuery();
+  await refreshKeyboard(ctx, chatId, msgId, state.mode, page);
 }
 
 async function handleDelete(ctx: Context, chatId: number, msgId: number) {
-  const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
-  const state = getState(chatId, msgId);
-  state.mode = "delete";
-  const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, "delete");
-  try {
-    await ctx.editMessageReplyMarkup({ reply_markup: kb });
-  } catch { /* ignore */ }
-  await ctx.answerCallbackQuery();
+  await refreshKeyboard(ctx, chatId, msgId, "delete");
 }
 
 async function handleDelask(ctx: Context, chatId: number, msgId: number, sessionId: number) {
@@ -216,27 +230,11 @@ async function handleDelyes(ctx: Context, chatId: number, msgId: number, session
 }
 
 async function handleDelno(ctx: Context, chatId: number, msgId: number) {
-  const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
-  const state = getState(chatId, msgId);
-  state.mode = "delete";
-  const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, "delete");
-  try {
-    await ctx.editMessageReplyMarkup({ reply_markup: kb });
-  } catch { /* ignore */ }
-  await ctx.answerCallbackQuery();
+  await refreshKeyboard(ctx, chatId, msgId, "delete");
 }
 
 async function handleBack(ctx: Context, chatId: number, msgId: number) {
-  const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
-  const state = getState(chatId, msgId);
-  state.mode = "normal";
-  const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, "normal");
-  try {
-    await ctx.editMessageReplyMarkup({ reply_markup: kb });
-  } catch { /* ignore */ }
-  await ctx.answerCallbackQuery();
+  await refreshKeyboard(ctx, chatId, msgId, "normal");
 }
 
 async function handleClose(ctx: Context, chatId: number, msgId: number) {
@@ -245,7 +243,9 @@ async function handleClose(ctx: Context, chatId: number, msgId: number) {
   managerMessages.delete(chatId);
   try {
     await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-  } catch { /* ignore */ }
+  } catch (err) {
+    if (!isBenignEditError(err)) console.error("handleClose error:", err);
+  }
   await ctx.answerCallbackQuery();
 }
 
@@ -301,7 +301,8 @@ export function registerSessionCallbacks(bot: Bot): void {
 }
 
 export async function showSessionManager(ctx: Context): Promise<void> {
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
 
   const sessions = await listSessions(chatId);
   const active = sessions.find(s => !s.archived);
@@ -320,8 +321,8 @@ export async function showSessionManager(ctx: Context): Promise<void> {
       const state = getState(chatId, existing);
       state.text = text;
       return;
-    } catch {
-      // message was deleted or too old — fall through to send new
+    } catch (err) {
+      if (!isBenignEditError(err)) console.error("showSessionManager edit error:", err);
     }
   }
 
