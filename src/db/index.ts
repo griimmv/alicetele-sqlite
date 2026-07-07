@@ -154,11 +154,14 @@ export async function getSession(sessionId: number): Promise<SessionRow | null> 
 
 export async function switchSession(sessionId: number): Promise<SessionRow> {
   if (!db) throw new Error("DB not initialized");
-  const session = await getSession(sessionId);
-  if (!session) throw new Error(`Session ${sessionId} not found`);
-  db.run("UPDATE sessions SET archived = 1 WHERE chat_id = ? AND archived = 0", [session.chat_id]);
-  db.run("UPDATE sessions SET archived = 0 WHERE id = ?", [sessionId]);
-  return db.query("SELECT * FROM sessions WHERE id = ?").get(sessionId) as SessionRow;
+  const switchTx = db.transaction((sid: number) => {
+    const session = db.query("SELECT * FROM sessions WHERE id = ?").get(sid) as SessionRow | null;
+    if (!session) throw new Error(`Session ${sid} not found`);
+    db.run("UPDATE sessions SET archived = 1 WHERE chat_id = ? AND archived = 0", [session.chat_id]);
+    db.run("UPDATE sessions SET archived = 0 WHERE id = ?", [sid]);
+    return db.query("SELECT * FROM sessions WHERE id = ?").get(sid) as SessionRow;
+  });
+  return switchTx(sessionId);
 }
 
 export async function renameSession(sessionId: number, name: string): Promise<void> {
