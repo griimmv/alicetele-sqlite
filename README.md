@@ -4,18 +4,16 @@ A Telegram bot that fetches Wikipedia articles via LLM. Built with [Grammy](http
 
 ## Requirements
 
-- **Bun** >= 1.0 — Runtime (install: `curl -fsSL https://bun.sh/install | bash`)
-- **ngrok** — Public HTTPS tunnel for local development ([ngrok.com](https://ngrok.com/download))
-- **Telegram Bot Token** — From [@BotFather](https://t.me/botfather)
-- **OpenAI API Key** — From [platform.openai.com](https://platform.openai.com/api-keys)
-
-No MySQL needed — uses SQLite via Bun's built-in `bun:sqlite`.
+- **Bun** >= 1.0 
+- **Telegram Bot Token** 
+- **OpenAI API Key** 
+- **ngrok** (optional, for local development)
 
 ## Installation
 
 ```bash
 # 1. Clone and install dependencies
-git clone <repo-url> && cd alicewiki-telegram
+git clone https://github.com/griimmv/alicetele-sqlite.git && cd alicetele-sqlite
 bun install
 
 # 2. Generate .env.local with a WEBHOOK_SECRET
@@ -93,14 +91,14 @@ Telegram ──HTTPS──> ngrok ──> Express (port 3000)
                                                             │
                                                     bot.on("message:text")
                                                             │
-                                              ┌───────────────┴───────────────┐
-                                              │                               │
+                                            ┌───────────────┴───────────────┐
+                                            │                               │
                                     getOrCreateSession()               runAgent()
-                                              │                               │
-                                        saveTurn()                    LangChain + OpenAI
-                                                                              │
+                                            │                               │
+                                        saveTurn()                  LangChain + OpenAI
+                                                                            │
                                                                       wikipediaTool
-                                                                        (fetch + search)
+                                                                    (fetch + search)
 ```
 
 ### Database
