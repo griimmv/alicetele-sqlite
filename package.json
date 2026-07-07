@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "bun run scripts/dev.ts",
     "start": "bun run src/index.ts",
-    "build": "bun build src/index.ts --outdir dist",
     "typecheck": "tsc --noEmit",
     "init-env": "bun run scripts/init-env.ts"
   },
