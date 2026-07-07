@@ -185,7 +185,7 @@ async function handleDelete(ctx: Context, chatId: number, msgId: number) {
 
 async function handleDelask(ctx: Context, chatId: number, msgId: number, sessionId: number) {
   const session = await getSession(sessionId);
-  if (!session) {
+  if (!session || session.chat_id !== chatId) {
     await ctx.answerCallbackQuery("Session not found.");
     return;
   }
@@ -198,10 +198,12 @@ async function handleDelask(ctx: Context, chatId: number, msgId: number, session
 
 async function handleDelyes(ctx: Context, chatId: number, msgId: number, sessionId: number) {
   const session = await getSession(sessionId);
+  if (!session || session.chat_id !== chatId) {
+    await ctx.answerCallbackQuery("Session not found.");
+    return;
+  }
   await deleteDbSession(sessionId);
-  const text = session
-    ? `✅ Session "#${session.id}: ${session.name}" deleted.`
-    : "✅ Session deleted.";
+  const text = `✅ Session "#${session.id}: ${session.name}" deleted.`;
   const sessions = await listSessions(chatId);
   const active = sessions.find(s => !s.archived);
   const state = getState(chatId, msgId);
