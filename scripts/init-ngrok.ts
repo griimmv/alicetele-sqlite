@@ -74,7 +74,7 @@ async function main() {
     process.env.WEBHOOK_URL = url;
     ensureWebhookSecret();
 
-    const bot = spawn(["bun", "--watch", "src/index.ts"], {
+    const bot = spawn(["bun", "src/index.ts"], {
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
     });

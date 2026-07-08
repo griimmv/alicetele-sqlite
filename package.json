@@ -4,8 +4,9 @@
   "description": "Telegram bot that fetches Wikipedia articles via LLM",
   "type": "module",
   "scripts": {
-    "dev": "bun run scripts/dev.ts",
+    "dev": "bun --watch src/index.ts",
     "start": "bun run src/index.ts",
+    "ngrok": "bun run scripts/init-ngrok.ts",
     "typecheck": "tsc --noEmit",
     "init-env": "bun run scripts/init-env.ts"
   },
