@@ -161,13 +161,23 @@ export function registerHandlers(bot: Bot): void {
         outputTokens: tokens.output,
       });
 
+      // llm query response assembler (summary, direct quotes, and sources)
       if (parsed) {
         const parts: string[] = [];
         if (parsed.summary) parts.push(parsed.summary);
 
+        if (parsed.quotes && parsed.quotes.length > 0) {
+          const quotes = parsed.quotes.map(
+            (q, i) => `[${i + 1}] "${q.text}"\n${q.url}`
+          );
+          parts.push(`Direct Quotes:\n${quotes.join("\n\n")}`);
+        }
+
         if (parsed.sources && parsed.sources.length > 0) {
-          const srcs = parsed.sources.map((s) => `- ${s.url || s.title}`);
-          parts.push(`\nSources:\n${srcs.join("\n")}`);
+          const srcs = parsed.sources.map(
+            (s, i) => `[${i + 1}] ${s.title}\n${s.url}`
+          );
+          parts.push(`Sources:\n${srcs.join("\n\n")}`);
         }
 
         await ctx.reply(parts.join("\n\n"));
