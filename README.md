@@ -62,9 +62,10 @@ bun run start
 
 | Command | Description |
 |---|---|
-| `bun run ngrok` | Start ngrok tunnel + run bot |
-| `bun run dev` | Start ngrok tunnel + run bot with file watching |
 | `bun run start` | Run bot in production (if you want to use your own domain, use this instead of run ngrok) |
+| `bun run ngrok` | Start ngrok tunnel + run bot |
+| `bun run dev` | Run bot with file watching |
+| `bun run dev-ngrok` | Start ngrok tunnel + run bot with file watching |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
 
 ## Architecture
