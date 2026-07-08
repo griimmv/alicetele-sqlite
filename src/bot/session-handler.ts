@@ -93,11 +93,13 @@ function buildSessionKeyboard(
 // --- Helpers ---
 
 function formatTurns(turns: TurnRow[]): string {
-  const lines = turns.map(t =>
-    `Turn ${t.turn_index + 1}: ${t.query.slice(0, 60)}${t.query.length > 60 ? "…" : ""}`
-  );
-  const text = lines.join("\n");
-  if (text.length > 3500) return text.slice(0, 3500) + "\n… (truncated)";
+  const lines = turns.map(t => {
+    const query = `${t.query.slice(0, 60)}${t.query.length > 60 ? "…" : ""}`;
+    const ai = t.summary ?? t.raw ?? "";
+    return `Turn ${t.turn_index + 1}:\nQ: ${query}\nA: ${ai}`;
+  });
+  const text = lines.join("\n\n");
+  if (text.length > 3900) return text.slice(0, 3900) + "\n… (truncated)";
   return text;
 }
 
