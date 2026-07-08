@@ -134,5 +134,6 @@ sessions: id | name | chat_id | archived | created_at
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
 | `/end` | Archive current session and start a fresh one |
+| `/tokens` | Show input, output, and total token usage for the current session |
 | `/export` | Export session history as a JSON file. Reply to a message to export from that point, or pass a turn number/query text. |
 | Any text | Send any topic to fetch Wikipedia articles and get an LLM-generated summary with sources |

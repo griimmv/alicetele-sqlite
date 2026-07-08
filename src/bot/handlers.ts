@@ -35,6 +35,7 @@ export function registerHandlers(bot: Bot): void {
       + "/end - End current session and start fresh\n"
       + "/sessions - Manage sessions (switch, create, delete)\n"
       + "/rename <name> - Rename the current session\n"
+      + "/tokens - Show token usage for this session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
     );
@@ -111,6 +112,25 @@ export function registerHandlers(bot: Bot): void {
     }
     await renameSession(session.id, name);
     await ctx.reply(`✅ Renamed to "${name}".`);
+  });
+
+  bot.command("tokens", async (ctx) => {
+    const chatId = ctx.chat.id;
+    const session = await getActiveSession(chatId);
+    if (!session) {
+      await ctx.reply("No active session.");
+      return;
+    }
+    const turns = await getSessionTurns(session.id);
+    const totalInput = turns.reduce((sum, t) => sum + t.input_tokens, 0);
+    const totalOutput = turns.reduce((sum, t) => sum + t.output_tokens, 0);
+    await ctx.reply(
+      `Session: ${session.name}\n`
+      + `Turns: ${turns.length}\n`
+      + `Input tokens: ${totalInput.toLocaleString()}\n`
+      + `Output tokens: ${totalOutput.toLocaleString()}\n`
+      + `Total tokens: ${(totalInput + totalOutput).toLocaleString()}`
+    );
   });
 
   registerSessionCallbacks(bot);
