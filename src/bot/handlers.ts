@@ -35,6 +35,7 @@ export function registerHandlers(bot: Bot): void {
       + "/end - End current session and start fresh\n"
       + "/sessions - Manage sessions (switch, create, delete)\n"
       + "/rename <name> - Rename the current session\n"
+      + "/tokens - Show token usage for this session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
     );
@@ -113,6 +114,25 @@ export function registerHandlers(bot: Bot): void {
     await ctx.reply(`✅ Renamed to "${name}".`);
   });
 
+  bot.command("tokens", async (ctx) => {
+    const chatId = ctx.chat.id;
+    const session = await getActiveSession(chatId);
+    if (!session) {
+      await ctx.reply("No active session.");
+      return;
+    }
+    const turns = await getSessionTurns(session.id);
+    const totalInput = turns.reduce((sum, t) => sum + t.input_tokens, 0);
+    const totalOutput = turns.reduce((sum, t) => sum + t.output_tokens, 0);
+    await ctx.reply(
+      `Session: ${session.name}\n`
+      + `Turns: ${turns.length}\n`
+      + `Input tokens: ${totalInput.toLocaleString()}\n`
+      + `Output tokens: ${totalOutput.toLocaleString()}\n`
+      + `Total tokens: ${(totalInput + totalOutput).toLocaleString()}`
+    );
+  });
+
   registerSessionCallbacks(bot);
 
   bot.on("message:text", async (ctx) => {
@@ -141,16 +161,30 @@ export function registerHandlers(bot: Bot): void {
         outputTokens: tokens.output,
       });
 
+      // llm query response assembler (summary, direct quotes, and sources)
       if (parsed) {
         const parts: string[] = [];
         if (parsed.summary) parts.push(parsed.summary);
 
-        if (parsed.sources && parsed.sources.length > 0) {
-          const srcs = parsed.sources.map((s) => `- ${s.url || s.title}`);
-          parts.push(`\nSources:\n${srcs.join("\n")}`);
+        if (parsed.quotes && parsed.quotes.length > 0) {
+          const quotes = parsed.quotes.map(
+            (q, i) => `[${i + 1}] "${q.text}"\n${q.url}`
+          );
+          parts.push(`Direct Quotes:\n${quotes.join("\n\n")}`);
         }
 
-        await ctx.reply(parts.join("\n\n"));
+        if (parsed.sources && parsed.sources.length > 0) {
+          const srcs = parsed.sources.map(
+            (s, i) => `[${i + 1}] ${s.title}\n${s.url}`
+          );
+          parts.push(`Sources:\n${srcs.join("\n\n")}`);
+        }
+
+        if (parts.length > 0) {
+           await ctx.reply(parts.join("\n\n"));
+         } else {
+           await ctx.reply("Received an empty response.");
+         }
       } else {
         await ctx.reply(content);
       }

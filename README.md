@@ -62,9 +62,10 @@ bun run start
 
 | Command | Description |
 |---|---|
-| `bun run ngrok` | Start ngrok tunnel + run bot |
-| `bun run dev` | Start ngrok tunnel + run bot with file watching |
 | `bun run start` | Run bot in production (if you want to use your own domain, use this instead of run ngrok) |
+| `bun run ngrok` | Start ngrok tunnel + run bot |
+| `bun run dev` | Run bot with file watching |
+| `bun run dev-ngrok` | Start ngrok tunnel + run bot with file watching |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
 
 ## Architecture
@@ -133,5 +134,6 @@ sessions: id | name | chat_id | archived | created_at
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
 | `/end` | Archive current session and start a fresh one |
+| `/tokens` | Show input, output, and total token usage for the current session |
 | `/export` | Export session history as a JSON file. Reply to a message to export from that point, or pass a turn number/query text. |
 | Any text | Send any topic to fetch Wikipedia articles and get an LLM-generated summary with sources |
