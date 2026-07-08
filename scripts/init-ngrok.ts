@@ -1,5 +1,4 @@
 import { $, spawn } from "bun";
-import { randomBytes } from "crypto";
 
 // ngrok's endpoint to get tunnel connection and domain
 const NGROK_API = "http://127.0.0.1:4040/api/tunnels";
@@ -29,20 +28,12 @@ function waitForTunnel(timeout = 30_000): Promise<string> {
   });
 }
 
-function ensureWebhookSecret() {
-  if (!process.env.WEBHOOK_SECRET) {
-    // generate an ephemeral secret since ngrok URL changes every session
-    process.env.WEBHOOK_SECRET = randomBytes(32).toString("hex");
-  }
-}
-
 async function main() {
   // if ngrok tunnel already running — reuse its URL
   const existingUrl = await getNgrokUrl();
   if (existingUrl) {
     console.log(`ngrok: ${existingUrl}`);
     process.env.WEBHOOK_URL = existingUrl; // ngrok makes its own WEBHOOK_URL in-memory, so WEBHOOK_URL in .env.local is untouched
-    ensureWebhookSecret();
     const bot = spawn(["bun", "--watch", "src/index.ts"], {
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
@@ -72,7 +63,6 @@ async function main() {
     const url = await waitForTunnel();
     console.log(`ngrok: ${url}`);
     process.env.WEBHOOK_URL = url;
-    ensureWebhookSecret();
 
     const bot = spawn(["bun", "src/index.ts"], {
       env: process.env,
