@@ -58,6 +58,7 @@ async function main() {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
+  let exitCode: number | null = null;
   try {
     // poll until tunnel URL is ready (up to 30s)
     const url = await waitForTunnel();
@@ -68,11 +69,12 @@ async function main() {
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
     });
-    await bot.exited;
+    exitCode = await bot.exited;
   } finally {
     // if Ctrl+C / exit — kill ngrok
     cleanup();
   }
+  process.exit(exitCode ?? 0);
 }
 
 main().catch((err) => {
