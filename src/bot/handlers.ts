@@ -180,7 +180,11 @@ export function registerHandlers(bot: Bot): void {
           parts.push(`Sources:\n${srcs.join("\n\n")}`);
         }
 
-        await ctx.reply(parts.join("\n\n"));
+        if (parts.length > 0) {
+           await ctx.reply(parts.join("\n\n"));
+         } else {
+           await ctx.reply("Received an empty response.");
+         }
       } else {
         await ctx.reply(content);
       }
