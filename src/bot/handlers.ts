@@ -161,6 +161,12 @@ export function registerHandlers(bot: Bot): void {
         outputTokens: tokens.output,
       });
 
+      // rename session title on first user's query
+      if (nextIndex === 0 && session.name === 'default') {
+        const title = query.length > 50 ? query.slice(0, 50) + '…' : query;
+        await renameSession(session.id, title);
+      }
+
       // llm query response assembler (summary, direct quotes, and sources)
       if (parsed) {
         const parts: string[] = [];
