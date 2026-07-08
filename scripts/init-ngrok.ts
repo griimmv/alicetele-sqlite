@@ -34,7 +34,7 @@ async function main() {
   if (existingUrl) {
     console.log(`ngrok: ${existingUrl}`);
     process.env.WEBHOOK_URL = existingUrl; // ngrok makes its own WEBHOOK_URL in-memory, so WEBHOOK_URL in .env.local is untouched
-    const bot = spawn(["bun", "--watch", "src/index.ts"], {
+    const bot = spawn(["bun", "src/index.ts"], {
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
     });

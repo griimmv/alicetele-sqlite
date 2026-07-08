@@ -69,7 +69,7 @@ bun run start
 
 ## Architecture
 
-```
+```text
 scripts/
 ├── init-ngrok.ts         ngrok tunnel launcher + runs /src/index.ts
 └── init-env.ts           Generate .env.local with WEBHOOK_SECRET
