@@ -41,7 +41,7 @@ async function main() {
   const existingUrl = await getNgrokUrl();
   if (existingUrl) {
     console.log(`ngrok: ${existingUrl}`);
-    process.env.WEBHOOK_URL = existingUrl;
+    process.env.WEBHOOK_URL = existingUrl; // ngrok makes its own WEBHOOK_URL in-memory, so WEBHOOK_URL in .env.local is untouched
     ensureWebhookSecret();
     const bot = spawn(["bun", "--watch", "src/index.ts"], {
       env: process.env,
