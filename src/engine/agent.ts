@@ -1,4 +1,4 @@
-import { toolRegistry } from "./tools/index.ts";
+import { toolRegistry } from "./tools/indextools.ts";
 import { parseJSONFromText } from "./parser.ts";
 
 const LLM_TIMEOUT = 30000;

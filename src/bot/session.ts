@@ -1,5 +1,5 @@
-import { getSessionTurns } from "../db/index.ts";
-import type { TurnRow } from "../db/index.ts";
+import { getSessionTurns } from "../db/indexdb.ts";
+import type { TurnRow } from "../db/indexdb.ts";
 
 export async function loadConversationHistory(
   sessionId: number,

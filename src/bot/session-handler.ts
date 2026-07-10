@@ -1,5 +1,5 @@
 import { Bot, Context, GrammyError, InlineKeyboard } from "grammy";
-import type { SessionRow, TurnRow } from "../db/index.ts";
+import type { SessionRow, TurnRow } from "../db/indexdb.ts";
 import {
   listSessions,
   getSession,
@@ -8,7 +8,7 @@ import {
   archiveSession,
   switchSession as switchDbSession,
   deleteSession as deleteDbSession,
-} from "../db/index.ts";
+} from "../db/indexdb.ts";
 
 const SESSIONS_PER_PAGE = 4;
 const PREFIX = "s";

@@ -2,7 +2,7 @@ import { Bot, InputFile } from "grammy";
 import { createAgent, runAgent } from "../engine/agent.ts";
 import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
-import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/index.ts";
+import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/indexdb.ts";
 import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
 import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
 import { buildToolKeyboard, setPendingQuery, registerToolCallbacks } from "./tool-selector.ts";
