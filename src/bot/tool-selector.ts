@@ -41,8 +41,8 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
     return;
   }
 
-  const entry = toolRegistry.find(e => e.tool.name === toolName);
-  if (!entry) {
+  const found = toolRegistry.find(entry => entry.tool.name === toolName);
+  if (!found) {
     await ctx.answerCallbackQuery(`Unknown tool: ${toolName}`);
     return;
   }
@@ -84,11 +84,11 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
       };
       if (data.summary) parts.push(data.summary);
       if (data.quotes?.length) {
-        const quotes = data.quotes.map((q, i) => `[${i + 1}] "${q.text}"\n${q.url}`);
+        const quotes = data.quotes.map((quote, i) => `[${i + 1}] "${quote.text}"\n${quote.url}`);
         parts.push(`Direct Quotes:\n${quotes.join("\n\n")}`);
       }
       if (data.sources?.length) {
-        const srcs = data.sources.map((s, i) => `[${i + 1}] ${s.title}\n${s.url}`);
+        const srcs = data.sources.map((source, i) => `[${i + 1}] ${source.title}\n${source.url}`);
         parts.push(`Sources:\n${srcs.join("\n\n")}`);
       }
 

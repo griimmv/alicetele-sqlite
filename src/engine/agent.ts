@@ -30,7 +30,7 @@ Respond ONLY with valid JSON matching this schema, no other text:
 }`;
 
 export function createAgent(llm: any) {
-  return { llm, tools: toolRegistry.map(e => e.tool) };
+  return { llm, tools: toolRegistry.map(entry => entry.tool) };
 }
 
 export interface TokenUsage {
@@ -72,14 +72,14 @@ export async function runAgent(
         ? result.content
         : Array.isArray(result.content)
           ? result.content
-              .map((c: any) => (typeof c === "string" ? c : c?.text ?? ""))
+              .map((block: any) => (typeof block === "string" ? block : block?.text ?? ""))
               .join("")
           : String(result.content ?? result);
 
     if (result.tool_calls?.length > 0) {
       messages.push({ role: "assistant", content: "", tool_calls: result.tool_calls });
       for (const tc of result.tool_calls) {
-        const tool = agent.tools.find((t: any) => t.name === tc.name);
+        const tool = agent.tools.find((tool: any) => tool.name === tc.name);
         if (tool) {
           const output: string = await withTimeout(
             tool.func(tc.args),

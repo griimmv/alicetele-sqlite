@@ -93,10 +93,10 @@ function buildSessionKeyboard(
 // --- Helpers ---
 
 function formatTurns(turns: TurnRow[]): string {
-  const lines = turns.map(t => {
-    const query = `${t.query.slice(0, 60)}${t.query.length > 60 ? "…" : ""}`;
-    const ai = t.summary ?? t.raw ?? "";
-    return `Turn ${t.turn_index + 1}:\nQ: ${query}\nA: ${ai}`;
+  const lines = turns.map(turn => {
+    const query = `${turn.query.slice(0, 60)}${turn.query.length > 60 ? "…" : ""}`;
+    const ai = turn.summary ?? turn.raw ?? "";
+    return `Turn ${turn.turn_index + 1}:\nQ: ${query}\nA: ${ai}`;
   });
   const text = lines.join("\n\n");
   if (text.length > 3900) return text.slice(0, 3900) + "\n… (truncated)";
@@ -135,7 +135,7 @@ async function refreshKeyboard(
   page?: number,
 ): Promise<void> {
   const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
+  const active = sessions.find(session => !session.archived);
   const state = getState(chatId, msgId);
   state.mode = mode;
   if (page !== undefined) state.page = page;
@@ -222,7 +222,7 @@ async function handleDelyes(ctx: Context, chatId: number, msgId: number, session
   await deleteDbSession(sessionId);
   const text = `✅ Session "#${session.id}: ${session.name}" deleted.`;
   const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
+  const active = sessions.find(session => !session.archived);
   const state = getState(chatId, msgId);
   state.mode = "normal";
   state.page = 1;
@@ -307,7 +307,7 @@ export async function showSessionManager(ctx: Context): Promise<void> {
   if (!chatId) return;
 
   const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
+  const active = sessions.find(session => !session.archived);
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
   const pageLabel = totalPages === 1 ? "1/1" : `1/${totalPages}`;
   const text = `📂 Your sessions (${pageLabel}):`;

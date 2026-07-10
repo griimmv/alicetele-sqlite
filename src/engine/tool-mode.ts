@@ -10,11 +10,11 @@ export async function runToolMode(
   query: string,
   toolName: string
 ): Promise<{ content: string; tokens: TokenUsage }> {
-  const entry = toolRegistry.find(e => e.tool.name === toolName);
-  if (!entry) throw new Error(`Unknown tool: ${toolName}`);
+  const found = toolRegistry.find(entry => entry.tool.name === toolName);
+  if (!found) throw new Error(`Unknown tool: ${toolName}`);
 
-  const raw = await entry.tool.func({ query }) as string;
-  const output = entry.formatOutput(raw, query);
+  const raw = await (found.tool as any).func({ query }) as string;
+  const output = found.formatOutput(raw, query);
 
   return {
     content: JSON.stringify(output),

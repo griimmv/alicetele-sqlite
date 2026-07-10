@@ -125,8 +125,8 @@ export function registerHandlers(bot: Bot): void {
       return;
     }
     const turns = await getSessionTurns(session.id);
-    const totalInput = turns.reduce((sum, t) => sum + t.input_tokens, 0);
-    const totalOutput = turns.reduce((sum, t) => sum + t.output_tokens, 0);
+    const totalInput = turns.reduce((sum, turn) => sum + turn.input_tokens, 0);
+    const totalOutput = turns.reduce((sum, turn) => sum + turn.output_tokens, 0);
     await ctx.reply(
       `Session: ${session.name}\n`
       + `Turns: ${turns.length}\n`
@@ -200,14 +200,14 @@ export function registerHandlers(bot: Bot): void {
 
         if (parsed.quotes && parsed.quotes.length > 0) {
           const quotes = parsed.quotes.map(
-            (q, i) => `[${i + 1}] "${q.text}"\n${q.url}`
+            (quote, i) => `[${i + 1}] "${quote.text}"\n${quote.url}`
           );
           parts.push(`Direct Quotes:\n${quotes.join("\n\n")}`);
         }
 
         if (parsed.sources && parsed.sources.length > 0) {
           const srcs = parsed.sources.map(
-            (s, i) => `[${i + 1}] ${s.title}\n${s.url}`
+            (source, i) => `[${i + 1}] ${source.title}\n${source.url}`
           );
           parts.push(`Sources:\n${srcs.join("\n\n")}`);
         }

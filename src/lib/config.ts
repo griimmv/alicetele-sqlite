@@ -3,7 +3,7 @@ const required = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 };
 
-const missing = Object.entries(required).filter(([, v]) => !v).map(([k]) => k);
+const missing = Object.entries(required).filter(([, value]) => !value).map(([key]) => key);
 if (missing.length > 0) {
   throw new Error(`Missing required env vars: ${missing.join(", ")}`);
 }

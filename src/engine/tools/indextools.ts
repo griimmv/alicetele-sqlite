@@ -26,12 +26,12 @@ export const toolRegistry: ToolEntry[] = [
       }
       const sentences = data.extract
         .split(/(?<=[.!?])\s+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 40);
+        .map(sentence => sentence.trim())
+        .filter(sentence => sentence.length > 40);
       return {
         summary: data.extract,
-        quotes: sentences.slice(0, 3).map(s => ({
-          text: s,
+        quotes: sentences.slice(0, 3).map(sentence => ({
+          text: sentence,
           source: data.title,
           url: data.url,
         })),
@@ -42,5 +42,5 @@ export const toolRegistry: ToolEntry[] = [
 ];
 
 export function getToolEntry(name: string): ToolEntry | undefined {
-  return toolRegistry.find(e => e.tool.name === name);
+  return toolRegistry.find(entry => entry.tool.name === name);
 }
