@@ -1,4 +1,5 @@
 import { wikipediaTool } from "./tools/wikipedia.ts";
+import { parseJSONFromText } from "./parser.ts";
 
 const LLM_TIMEOUT = 30000;
 const TOOL_TIMEOUT = 20000;
@@ -107,12 +108,4 @@ export async function runAgent(
   };
 }
 
-function parseJSONFromText(text: string): Record<string, unknown> | null {
-  const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const str = match ? match[1] : text.trim();
-  try {
-    return JSON.parse(str);
-  } catch {
-    return null;
-  }
-}
+

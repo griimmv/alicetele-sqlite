@@ -1,7 +1,9 @@
 import { Bot, InputFile } from "grammy";
 import { createAgent, runAgent } from "../engine/agent.ts";
+import { runToolMode } from "../engine/tool-mode.ts";
+import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
-import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession } from "../db/index.ts";
+import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/index.ts";
 import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
 import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
 
@@ -35,6 +37,7 @@ export function registerHandlers(bot: Bot): void {
       + "/end - End current session and start fresh\n"
       + "/sessions - Manage sessions (switch, create, delete)\n"
       + "/rename <name> - Rename the current session\n"
+      + "/mode [agentic|tool] - Toggle between agentic and tool mode\n"
       + "/tokens - Show token usage for this session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
@@ -133,6 +136,21 @@ export function registerHandlers(bot: Bot): void {
     );
   });
 
+  bot.command("mode", async (ctx) => {
+    const chatId = ctx.chat.id;
+    const arg = ctx.match?.trim().toLowerCase();
+    if (arg === "agentic" || arg === "tool") {
+      await setChatMode(chatId, arg);
+      await ctx.reply(`Mode switched to "${arg}".`);
+    } else {
+      const current = await getChatMode(chatId);
+      await ctx.reply(
+        `Current mode: ${current}
+\n\nUse /mode agentic or /mode tool to switch.`
+      );
+    }
+  });
+
   registerSessionCallbacks(bot);
 
   bot.on("message:text", async (ctx) => {
@@ -147,8 +165,11 @@ export function registerHandlers(bot: Bot): void {
       const history = await loadConversationHistory(session.id);
       const nextIndex = history.length / 2; // each turn = 2 messages (user + assistant)
 
-      const { content, tokens } = await runAgent(getAgent(), query, history);
-      const parsed = tryParseJSON(content) as ParsedResponse | null;
+      const sessionMode = await getChatMode(chatId);
+      const { content, tokens } = sessionMode === "tool"
+        ? await runToolMode(query)
+        : await runAgent(getAgent(), query, history);
+      const parsed = parseJSONFromText(content) as ParsedResponse | null;
 
       await saveTurn(session.id, {
         query,
@@ -201,12 +222,3 @@ export function registerHandlers(bot: Bot): void {
   });
 }
 
-function tryParseJSON(text: string): Record<string, unknown> | null {
-  try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    const str = match ? match[1] : text.trim();
-    return JSON.parse(str);
-  } catch {
-    return null;
-  }
-}
