@@ -135,7 +135,7 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
 SQLite file stored at `DATABASE_PATH` (default: `./data/alicewiki.db`). Tables are auto-created on first run.
 
 ```sql
-sessions: id | name | chat_id | archived | created_at
+sessions: id | name | chat_id | archived | mode | created_at
    turns: id | session_id | turn_index | query | summary | quotes | sources | raw | error | input_tokens | output_tokens | created_at
 ```
 
