@@ -1,4 +1,4 @@
-import { wikipediaTool } from "./tools/wikipedia.ts";
+import { toolRegistry } from "./tools/index.ts";
 import { parseJSONFromText } from "./parser.ts";
 
 const LLM_TIMEOUT = 30000;
@@ -30,7 +30,7 @@ Respond ONLY with valid JSON matching this schema, no other text:
 }`;
 
 export function createAgent(llm: any) {
-  return { llm, tools: [wikipediaTool] };
+  return { llm, tools: toolRegistry };
 }
 
 export interface TokenUsage {

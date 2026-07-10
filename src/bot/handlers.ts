@@ -1,11 +1,11 @@
 import { Bot, InputFile } from "grammy";
 import { createAgent, runAgent } from "../engine/agent.ts";
-import { runToolMode } from "../engine/tool-mode.ts";
 import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
 import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/index.ts";
 import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
 import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
+import { buildToolKeyboard, setPendingQuery, registerToolCallbacks } from "./tool-selector.ts";
 
 interface ParsedResponse {
   summary?: string;
@@ -145,13 +145,13 @@ export function registerHandlers(bot: Bot): void {
     } else {
       const current = await getChatMode(chatId);
       await ctx.reply(
-        `Current mode: ${current}
-\n\nUse /mode agentic or /mode tool to switch.`
+        `Current mode: ${current}\n\nUse /mode agentic or /mode tool to switch.`
       );
     }
   });
 
   registerSessionCallbacks(bot);
+  registerToolCallbacks(bot);
 
   bot.on("message:text", async (ctx) => {
     const chatId = ctx.chat.id;
@@ -166,9 +166,14 @@ export function registerHandlers(bot: Bot): void {
       const nextIndex = history.length / 2; // each turn = 2 messages (user + assistant)
 
       const sessionMode = await getChatMode(chatId);
-      const { content, tokens } = sessionMode === "tool"
-        ? await runToolMode(query)
-        : await runAgent(getAgent(), query, history);
+
+      if (sessionMode === "tool") {
+        setPendingQuery(chatId, query);
+        await ctx.reply("Choose a tool:", { reply_markup: buildToolKeyboard() });
+        return;
+      }
+
+      const { content, tokens } = await runAgent(getAgent(), query, history);
       const parsed = parseJSONFromText(content) as ParsedResponse | null;
 
       await saveTurn(session.id, {
@@ -184,7 +189,7 @@ export function registerHandlers(bot: Bot): void {
 
       // rename session title on first user's query
       if (nextIndex === 0 && session.name === 'default') {
-        const title = query.length > 50 ? query.slice(0, 50) + '…' : query;
+        const title = query.length > 50 ? query.slice(0, 50) + '\u2026' : query;
         await renameSession(session.id, title);
       }
 
@@ -221,4 +226,3 @@ export function registerHandlers(bot: Bot): void {
     }
   });
 }
-
