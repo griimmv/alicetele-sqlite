@@ -13,7 +13,7 @@ export async function runToolMode(
   const found = toolRegistry.find(entry => entry.tool.name === toolName);
   if (!found) throw new Error(`Unknown tool: ${toolName}`);
 
-  const raw = await (found.tool as any).func({ query }) as string;
+  const raw = await found.tool.invoke({ query }) as string;
   const output = found.formatOutput(raw, query);
 
   return {
