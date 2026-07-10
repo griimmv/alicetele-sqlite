@@ -30,7 +30,7 @@ Respond ONLY with valid JSON matching this schema, no other text:
 }`;
 
 export function createAgent(llm: any) {
-  return { llm, tools: toolRegistry };
+  return { llm, tools: toolRegistry.map(e => e.tool) };
 }
 
 export interface TokenUsage {

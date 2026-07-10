@@ -1,5 +1,6 @@
 import { Bot, Context, GrammyError, InlineKeyboard } from "grammy";
-import { getTool, toolRegistry } from "../engine/tools/indextools.ts";
+import { toolRegistry } from "../engine/tools/indextools.ts";
+import { runToolMode } from "../engine/tool-mode.ts";
 import { parseJSONFromText } from "../engine/parser.ts";
 import { getOrCreateSession, saveTurn } from "../db/indexdb.ts";
 import { loadConversationHistory } from "./session.ts";
@@ -26,8 +27,8 @@ function cb(action: string): string {
 
 export function buildToolKeyboard(): InlineKeyboard {
   const kb = new InlineKeyboard();
-  for (const tool of toolRegistry) {
-    kb.text(tool.name, cb(tool.name)).row();
+  for (const entry of toolRegistry) {
+    kb.text(entry.tool.name, cb(entry.tool.name)).row();
   }
   kb.text("Cancel", cb("cancel"));
   return kb;
@@ -40,8 +41,8 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
     return;
   }
 
-  const tool = getTool(toolName);
-  if (!tool) {
+  const entry = toolRegistry.find(e => e.tool.name === toolName);
+  if (!entry) {
     await ctx.answerCallbackQuery(`Unknown tool: ${toolName}`);
     return;
   }
@@ -49,9 +50,8 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
   clearPendingQuery(chatId);
 
   try {
-    const raw = await (tool as any).func({ query }) as string;
-    const parsed = parseJSONFromText(raw);
-    const content = parsed ? JSON.stringify(parsed) : raw;
+    const { content } = await runToolMode(query, toolName);
+    const parsed = parseJSONFromText(content);
 
     const session = await getOrCreateSession(chatId);
     const history = await loadConversationHistory(session.id);
