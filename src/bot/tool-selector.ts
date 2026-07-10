@@ -2,7 +2,7 @@ import { Bot, Context, GrammyError, InlineKeyboard } from "grammy";
 import { toolRegistry } from "../engine/tools/indextools.ts";
 import { runToolMode } from "../engine/tool-mode.ts";
 import { parseJSONFromText } from "../engine/parser.ts";
-import { getOrCreateSession, saveTurn } from "../db/indexdb.ts";
+import { getOrCreateSession, saveTurn, renameSession } from "../db/indexdb.ts";
 import { loadConversationHistory } from "./session.ts";
 
 const PREFIX = "t";
@@ -71,7 +71,6 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
 
     // rename session on first turn
     if (nextIndex === 0 && session.name === "default") {
-      const { renameSession } = await import("../db/indexdb.ts");
       const title = query.length > 50 ? query.slice(0, 50) + "…" : query;
       await renameSession(session.id, title);
     }
