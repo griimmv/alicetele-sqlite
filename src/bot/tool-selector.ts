@@ -48,6 +48,7 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
   }
 
   clearPendingQuery(chatId);
+  await ctx.answerCallbackQuery();
 
   try {
     const { content } = await runToolMode(query, toolName);
@@ -111,7 +112,6 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
       }
     }
 
-    await ctx.answerCallbackQuery();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     try {
@@ -119,7 +119,6 @@ async function handleToolCall(ctx: Context, chatId: number, msgId: number, toolN
     } catch {
       await ctx.reply(`Error: ${msg}`);
     }
-    await ctx.answerCallbackQuery();
   }
 }
 
