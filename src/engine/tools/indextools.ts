@@ -1,5 +1,6 @@
 import { wikipediaTool, type WikiResult } from "./wikipedia.ts";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import { parseJSONFromText } from "../parser.ts";
 
 export interface ToolOutput {
   summary: string;
@@ -16,8 +17,8 @@ export const toolRegistry: ToolEntry[] = [
   {
     tool: wikipediaTool,
     formatOutput(raw, query) {
-      const data = JSON.parse(raw) as WikiResult;
-      if (!data.foundArticle) {
+      const data = parseJSONFromText(raw) as unknown as WikiResult | null;
+      if (!data?.foundArticle) {
         return {
           summary: data.notification ?? `No Wikipedia article found for "${query}".`,
           quotes: [],
