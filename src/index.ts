@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import express from "express";
 import { config } from "./lib/config.ts";
-import { initDB } from "./db/index.ts";
+import { initDB } from "./db/indexdb.ts";
 import { getBot, setWebhook } from "./bot/client.ts";
 import { registerHandlers } from "./bot/handlers.ts";
 import webhookRouter from "./routes/webhook.ts";

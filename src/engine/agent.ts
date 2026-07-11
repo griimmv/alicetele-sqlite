@@ -1,4 +1,5 @@
-import { wikipediaTool } from "./tools/wikipedia.ts";
+import { toolRegistry } from "./tools/indextools.ts";
+import { parseJSONFromText } from "./parser.ts";
 
 const LLM_TIMEOUT = 30000;
 const TOOL_TIMEOUT = 20000;
@@ -29,7 +30,7 @@ Respond ONLY with valid JSON matching this schema, no other text:
 }`;
 
 export function createAgent(llm: any) {
-  return { llm, tools: [wikipediaTool] };
+  return { llm, tools: toolRegistry.map(entry => entry.tool) };
 }
 
 export interface TokenUsage {
@@ -71,14 +72,14 @@ export async function runAgent(
         ? result.content
         : Array.isArray(result.content)
           ? result.content
-              .map((c: any) => (typeof c === "string" ? c : c?.text ?? ""))
+              .map((block: any) => (typeof block === "string" ? block : block?.text ?? ""))
               .join("")
           : String(result.content ?? result);
 
     if (result.tool_calls?.length > 0) {
       messages.push({ role: "assistant", content: "", tool_calls: result.tool_calls });
       for (const tc of result.tool_calls) {
-        const tool = agent.tools.find((t: any) => t.name === tc.name);
+        const tool = agent.tools.find((tool: any) => tool.name === tc.name);
         if (tool) {
           const output: string = await withTimeout(
             tool.func(tc.args),
@@ -107,12 +108,4 @@ export async function runAgent(
   };
 }
 
-function parseJSONFromText(text: string): Record<string, unknown> | null {
-  const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const str = match ? match[1] : text.trim();
-  try {
-    return JSON.parse(str);
-  } catch {
-    return null;
-  }
-}
+

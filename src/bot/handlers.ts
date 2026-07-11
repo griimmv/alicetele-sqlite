@@ -1,9 +1,11 @@
 import { Bot, InputFile } from "grammy";
 import { createAgent, runAgent } from "../engine/agent.ts";
+import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
-import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession } from "../db/index.ts";
+import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/indexdb.ts";
 import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
 import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
+import { buildToolKeyboard, setPendingQuery, registerToolCallbacks } from "./tool-selector.ts";
 
 interface ParsedResponse {
   summary?: string;
@@ -35,6 +37,7 @@ export function registerHandlers(bot: Bot): void {
       + "/end - End current session and start fresh\n"
       + "/sessions - Manage sessions (switch, create, delete)\n"
       + "/rename <name> - Rename the current session\n"
+      + "/mode [agentic|tool] - Toggle between agentic and tool mode\n"
       + "/tokens - Show token usage for this session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
@@ -122,8 +125,8 @@ export function registerHandlers(bot: Bot): void {
       return;
     }
     const turns = await getSessionTurns(session.id);
-    const totalInput = turns.reduce((sum, t) => sum + t.input_tokens, 0);
-    const totalOutput = turns.reduce((sum, t) => sum + t.output_tokens, 0);
+    const totalInput = turns.reduce((sum, turn) => sum + turn.input_tokens, 0);
+    const totalOutput = turns.reduce((sum, turn) => sum + turn.output_tokens, 0);
     await ctx.reply(
       `Session: ${session.name}\n`
       + `Turns: ${turns.length}\n`
@@ -133,7 +136,22 @@ export function registerHandlers(bot: Bot): void {
     );
   });
 
+  bot.command("mode", async (ctx) => {
+    const chatId = ctx.chat.id;
+    const arg = ctx.match?.trim().toLowerCase();
+    if (arg === "agentic" || arg === "tool") {
+      await setChatMode(chatId, arg);
+      await ctx.reply(`Mode switched to "${arg}".`);
+    } else {
+      const current = await getChatMode(chatId);
+      await ctx.reply(
+        `Current mode: ${current}\n\nUse /mode agentic or /mode tool to switch.`
+      );
+    }
+  });
+
   registerSessionCallbacks(bot);
+  registerToolCallbacks(bot);
 
   bot.on("message:text", async (ctx) => {
     const chatId = ctx.chat.id;
@@ -147,8 +165,16 @@ export function registerHandlers(bot: Bot): void {
       const history = await loadConversationHistory(session.id);
       const nextIndex = history.length / 2; // each turn = 2 messages (user + assistant)
 
+      const sessionMode = await getChatMode(chatId);
+
+      if (sessionMode === "tool") {
+        setPendingQuery(chatId, query);
+        await ctx.reply("Choose a tool:", { reply_markup: buildToolKeyboard() });
+        return;
+      }
+
       const { content, tokens } = await runAgent(getAgent(), query, history);
-      const parsed = tryParseJSON(content) as ParsedResponse | null;
+      const parsed = parseJSONFromText(content) as ParsedResponse | null;
 
       await saveTurn(session.id, {
         query,
@@ -161,6 +187,12 @@ export function registerHandlers(bot: Bot): void {
         outputTokens: tokens.output,
       });
 
+      // rename session title on first user's query
+      if (nextIndex === 0 && session.name === 'default') {
+        const title = query.length > 50 ? query.slice(0, 50) + '\u2026' : query;
+        await renameSession(session.id, title);
+      }
+
       // llm query response assembler (summary, direct quotes, and sources)
       if (parsed) {
         const parts: string[] = [];
@@ -168,14 +200,14 @@ export function registerHandlers(bot: Bot): void {
 
         if (parsed.quotes && parsed.quotes.length > 0) {
           const quotes = parsed.quotes.map(
-            (q, i) => `[${i + 1}] "${q.text}"\n${q.url}`
+            (quote, i) => `[${i + 1}] "${quote.text}"\n${quote.url}`
           );
           parts.push(`Direct Quotes:\n${quotes.join("\n\n")}`);
         }
 
         if (parsed.sources && parsed.sources.length > 0) {
           const srcs = parsed.sources.map(
-            (s, i) => `[${i + 1}] ${s.title}\n${s.url}`
+            (source, i) => `[${i + 1}] ${source.title}\n${source.url}`
           );
           parts.push(`Sources:\n${srcs.join("\n\n")}`);
         }
@@ -193,14 +225,4 @@ export function registerHandlers(bot: Bot): void {
       await ctx.reply(`Error: ${msg}`);
     }
   });
-}
-
-function tryParseJSON(text: string): Record<string, unknown> | null {
-  try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    const str = match ? match[1] : text.trim();
-    return JSON.parse(str);
-  } catch {
-    return null;
-  }
 }

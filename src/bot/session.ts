@@ -1,5 +1,5 @@
-import { getSessionTurns } from "../db/index.ts";
-import type { TurnRow } from "../db/index.ts";
+import { getSessionTurns } from "../db/indexdb.ts";
+import type { TurnRow } from "../db/indexdb.ts";
 
 export async function loadConversationHistory(
   sessionId: number,
@@ -36,12 +36,12 @@ export function buildExportData(
       name: session.name,
       created_at: session.created_at,
     },
-    turns: turns.map((t) => ({
-      query: t.query,
-      summary: t.summary,
-      quotes: parseJSON(t.quotes),
-      sources: parseJSON(t.sources),
-      tokens: { input: t.input_tokens, output: t.output_tokens },
+    turns: turns.map((turn) => ({
+      query: turn.query,
+      summary: turn.summary,
+      quotes: parseJSON(turn.quotes),
+      sources: parseJSON(turn.sources),
+      tokens: { input: turn.input_tokens, output: turn.output_tokens },
     })),
   };
 }

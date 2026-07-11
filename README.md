@@ -80,8 +80,10 @@ src/
 │   └── config.ts         Env var loading and validation
 ├── bot/
 │   ├── client.ts         Grammy Bot instance, webhook callback handler, setWebhook()
-│   ├── handlers.ts       Telegram command and message handlers (/start, /help, /end, /export, text)
-│   └── session.ts        Conversation history loading, export building, turn matching
+│   ├── handlers.ts       Telegram command and message handlers (mode dispatch, /start, /help, etc.)
+│   ├── session.ts        Conversation history loading, export building, turn matching
+│   ├── session-handler.ts Session management inline keyboard UI (/sessions)
+│   └── tool-selector.ts  Tool selection keyboard, pending query store, tool callback dispatch
 ├── routes/
 │   └── webhook.ts        Express router — POST /api/webhook
 ├── db/
@@ -90,7 +92,10 @@ src/
 └── engine/
     ├── agent.ts          LLM agent loop — invokes LLM with tools, retry logic, timeout handling
     ├── llm.ts            ChatOpenAI instantiation
+    ├── parser.ts         Extract JSON from LLM text responses
+    ├── tool-mode.ts      Direct (non-agentic) tool execution pathway
     └── tools/
+        ├── indextools.ts Tool registry array (shared by agent and tool-mode)
         └── wikipedia.ts  Wikipedia search tool (LangChain tool schema, with fallback search)
 ```
 
@@ -103,14 +108,25 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
                                                             │
                                                     bot.on("message:text")
                                                             │
+                                                      getChatMode()
+                                                            │
                                             ┌───────────────┴───────────────┐
                                             │                               │
-                                    getOrCreateSession()               runAgent()
+                                        agentic                          tool
                                             │                               │
-                                        saveTurn()                  LangChain + OpenAI
-                                                                            │
-                                                                      wikipediaTool
-                                                                    (fetch + search)
+                                      runAgent()                  setPendingQuery()
+                                            │                         + show keyboard
+                                    LangChain + OpenAI                     │
+                                            │                    [user clicks button]
+                                      wikipediaTool                        │
+                                    (fetch + search)               runToolMode()
+                                            │                     (wikipediaTool)
+                                            │                               │
+                                            └───────────────┬───────────────┘
+                                                            │
+                                                       getOrCreateSession()
+                                                            │
+                                                        saveTurn()
 ```
 
 
@@ -119,7 +135,7 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
 SQLite file stored at `DATABASE_PATH` (default: `./data/alicewiki.db`). Tables are auto-created on first run.
 
 ```sql
-sessions: id | name | chat_id | archived | created_at
+sessions: id | name | chat_id | archived | mode | created_at
    turns: id | session_id | turn_index | query | summary | quotes | sources | raw | error | input_tokens | output_tokens | created_at
 ```
 
@@ -130,10 +146,13 @@ sessions: id | name | chat_id | archived | created_at
 ## Commands
 
 | Command | Description |
-|---|---|
+|---|---|---|
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
+| `/mode [agentic\|tool]` | Toggle between agentic (LLM-decides) and tool (manual pick) mode |
+| `/sessions` | Switch, rename, or delete sessions |
+| `/rename <name>` | Rename the current session |
 | `/end` | Archive current session and start a fresh one |
 | `/tokens` | Show input, output, and total token usage for the current session |
 | `/export` | Export session history as a JSON file. Reply to a message to export from that point, or pass a turn number/query text. |
-| Any text | Send any topic to fetch Wikipedia articles and get an LLM-generated summary with sources |
+| Any text | Fetch Wikipedia article and get a structured summary with sources (agentic) or pick a tool (tool mode) |

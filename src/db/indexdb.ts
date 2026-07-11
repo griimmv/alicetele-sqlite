@@ -10,6 +10,7 @@ export interface SessionRow {
   name: string;
   chat_id: number;
   archived: number;
+  mode: string;
   created_at: string;
 }
 
@@ -44,6 +45,7 @@ export async function initDB(): Promise<void> {
     name       TEXT NOT NULL DEFAULT 'default',
     chat_id    INTEGER NOT NULL,
     archived   INTEGER NOT NULL DEFAULT 0,
+    mode       TEXT NOT NULL DEFAULT 'agentic',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
 
@@ -64,6 +66,7 @@ export async function initDB(): Promise<void> {
   )`);
 
   db.run("CREATE INDEX IF NOT EXISTS idx_sessions_chat ON sessions(chat_id, archived)");
+  try { db.run("ALTER TABLE sessions ADD COLUMN mode TEXT NOT NULL DEFAULT 'agentic'"); } catch (err) { if (!(err instanceof Error && err.message.includes("duplicate column"))) throw err; }
   db.run("CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, turn_index)");
 }
 // Returns the active session for a chat, or creates one if none exists.
@@ -74,9 +77,11 @@ export async function getOrCreateSession(chatId: number): Promise<SessionRow> {
   ).get(chatId) as SessionRow | null;
   if (row) return row;
 
+    // Copy mode from previous session if exists
+  const prev = db.query("SELECT mode FROM sessions WHERE chat_id = ? AND mode IS NOT NULL ORDER BY id DESC LIMIT 1").get(chatId) as { mode: string } | null;
   const result = db.run(
-    "INSERT INTO sessions (name, chat_id, archived) VALUES ('default', ?, 0)",
-    [chatId]
+    "INSERT INTO sessions (name, chat_id, archived, mode) VALUES ('default', ?, 0, COALESCE(?, 'agentic'))",
+    [chatId, prev?.mode ?? 'agentic']
   );
   return db.query("SELECT * FROM sessions WHERE id = ?").get(Number(result.lastInsertRowid)) as SessionRow;
 }
@@ -172,6 +177,22 @@ export async function renameSession(sessionId: number, name: string): Promise<vo
 export async function deleteSession(sessionId: number): Promise<void> {
   if (!db) throw new Error("DB not initialized");
   db.run("DELETE FROM sessions WHERE id = ?", [sessionId]);
+}
+
+export async function getChatMode(chatId: number): Promise<string> {
+  if (!db) return "agentic";
+  const row = db.query(
+    "SELECT mode FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1"
+  ).get(chatId) as { mode: string } | null;
+  return row?.mode ?? "agentic";
+}
+
+export async function setChatMode(chatId: number, mode: string): Promise<void> {
+  if (!db) throw new Error("DB not initialized");
+  db.run(
+    "UPDATE sessions SET mode = ? WHERE chat_id = ? AND archived = 0",
+    [mode, chatId]
+  );
 }
 
 export async function closeDB(): Promise<void> {
