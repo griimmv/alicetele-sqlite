@@ -197,7 +197,14 @@ async function handlePage(ctx: Context, chatId: number, msgId: number, page: num
 }
 
 async function handleDelete(ctx: Context, chatId: number, msgId: number) {
-  await refreshKeyboard(ctx, chatId, msgId, "delete");
+  const sessions = await listSessions(chatId);
+  const active = sessions.find(session => !session.archived);
+  const state = getState(chatId, msgId);
+  state.mode = "delete";
+  state.page = 1;
+  const kb = buildSessionKeyboard(sessions, active?.id ?? null, 1, "delete");
+  await editManager(ctx, chatId, msgId, "Press a session to delete:", kb);
+  await ctx.answerCallbackQuery();
 }
 
 async function handleDelask(ctx: Context, chatId: number, msgId: number, sessionId: number) {
@@ -236,7 +243,15 @@ async function handleDelno(ctx: Context, chatId: number, msgId: number) {
 }
 
 async function handleBack(ctx: Context, chatId: number, msgId: number) {
-  await refreshKeyboard(ctx, chatId, msgId, "normal");
+  const sessions = await listSessions(chatId);
+  const active = sessions.find(session => !session.archived);
+  const state = getState(chatId, msgId);
+  state.mode = "normal";
+  const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
+  const pageLabel = totalPages === 1 ? "1/1" : `${state.page}/${totalPages}`;
+  const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, "normal");
+  await editManager(ctx, chatId, msgId, `📂 Your sessions (${pageLabel}):`, kb);
+  await ctx.answerCallbackQuery();
 }
 
 async function handleClose(ctx: Context, chatId: number, msgId: number) {

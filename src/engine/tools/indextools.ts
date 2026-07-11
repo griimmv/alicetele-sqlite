@@ -1,4 +1,5 @@
 import { wikipediaTool, type WikiResult } from "./wikipedia.ts";
+import { stackoverflowTool, type StackExchangeResult } from "./stackexchange.ts";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import { parseJSONFromText } from "../parser.ts";
 
@@ -37,6 +38,26 @@ export const toolRegistry: ToolEntry[] = [
           url: data.url,
         })),
         sources: [{ title: data.title, url: data.url }],
+      };
+    },
+  },
+  {
+    tool: stackoverflowTool,
+    formatOutput(raw, query) {
+      const data = parseJSONFromText(raw) as unknown as StackExchangeResult | null;
+      if (!data?.found) {
+        return {
+          summary: data?.notification ?? `No Stack Overflow results found for "${query}".`,
+          quotes: [],
+          sources: [],
+        };
+      }
+      return {
+        summary: data.items.map((item, i) =>
+          `${i + 1}. [${item.score} votes] ${item.title}\n   ${item.url}`
+        ).join("\n\n"),
+        quotes: [],
+        sources: data.items.map(item => ({ title: item.title, url: item.url })),
       };
     },
   },
