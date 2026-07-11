@@ -20,7 +20,7 @@ export const toolRegistry: ToolEntry[] = [
       const data = parseJSONFromText(raw) as unknown as WikiResult | null;
       if (!data?.foundArticle) {
         return {
-          summary: data.notification ?? `No Wikipedia article found for "${query}".`,
+          summary: data?.notification ?? `No Wikipedia article found for "${query}".`,
           quotes: [],
           sources: [],
         };
