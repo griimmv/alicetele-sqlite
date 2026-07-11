@@ -66,7 +66,7 @@ export async function initDB(): Promise<void> {
   )`);
 
   db.run("CREATE INDEX IF NOT EXISTS idx_sessions_chat ON sessions(chat_id, archived)");
-  try { db.run("ALTER TABLE sessions ADD COLUMN mode TEXT NOT NULL DEFAULT 'agentic'"); } catch { /* already migrated */ }
+  try { db.run("ALTER TABLE sessions ADD COLUMN mode TEXT NOT NULL DEFAULT 'agentic'"); } catch (err) { if (!(err instanceof Error && err.message.includes("duplicate column"))) throw err; }
   db.run("CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, turn_index)");
 }
 // Returns the active session for a chat, or creates one if none exists.
