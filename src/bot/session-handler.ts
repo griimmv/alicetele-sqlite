@@ -56,10 +56,11 @@ function parseCb(data: string): { action: string; args: string[] } {
 function buildSessionKeyboard(
   sessions: SessionRow[],
   activeId: number | null,
-  page: number,
+  rawPage: number,
   mode: "normal" | "delete",
 ): InlineKeyboard {
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
+  const page = Math.max(1, Math.min(rawPage, totalPages));
   const start = (page - 1) * SESSIONS_PER_PAGE;
   const pageSessions = sessions.slice(start, start + SESSIONS_PER_PAGE);
   const kb = new InlineKeyboard();
@@ -248,6 +249,7 @@ async function handleBack(ctx: Context, chatId: number, msgId: number) {
   const state = getState(chatId, msgId);
   state.mode = "normal";
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
+  state.page = Math.max(1, Math.min(state.page, totalPages));
   const pageLabel = totalPages === 1 ? "1/1" : `${state.page}/${totalPages}`;
   const kb = buildSessionKeyboard(sessions, active?.id ?? null, state.page, "normal");
   await editManager(ctx, chatId, msgId, `📂 Your sessions (${pageLabel}):`, kb);
