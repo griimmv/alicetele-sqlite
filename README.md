@@ -95,7 +95,7 @@ src/
     ├── agent.ts          LLM agent loop — invokes LLM with tools, retry logic, timeout handling
     ├── llm.ts            ChatOpenAI instantiation
     ├── parser.ts         Extract JSON from LLM text responses
-    ├── tool-mode.ts      Direct (non-agentic) tool execution pathway
+    ├── tool-mode.ts      Direct (non-chat) tool execution pathway
     └── tools/
         ├── indextools.ts Tool registry array (shared by agent and tool-mode)
         └── wikipedia.ts  Wikipedia search tool (LangChain tool schema, with fallback search)
@@ -114,7 +114,7 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
                                                             │
                                             ┌───────────────┴───────────────┐
                                             │                               │
-                                        agentic                          tool
+                                        chat                          tool
                                             │                               │
                                       runAgent()                  setPendingQuery()
                                             │                         + show keyboard
@@ -151,10 +151,10 @@ sessions: id | name | chat_id | archived | mode | created_at
 |---|---|
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
-| `/mode [agentic\|tool]` | Toggle between agentic (LLM-decides) and tool (manual pick) mode |
+| `/mode [chat\|tool]` | Toggle between chat (LLM-decides) and tool (manual pick) mode |
 | `/sessions` | Switch, rename, or delete sessions |
 | `/rename <name>` | Rename the current session |
 | `/end` | Archive current session and start a fresh one |
 | `/tokens` | Show input, output, and total token usage for the current session |
-| `/export` | Export session history as a JSON file. Reply to a message to export from that point, or pass a turn number/query text. |
-| Any text | Fetch Wikipedia article and get a structured summary with sources (agentic) or pick a tool (tool mode) |
+| `/export` | Export current session history as a JSON file. |
+| Any text | Fetch Wikipedia article and get a structured summary with sources (chat) or pick a tool (tool mode) |

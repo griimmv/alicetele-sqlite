@@ -37,7 +37,7 @@ export function registerHandlers(bot: Bot): void {
       + "/end - End current session and start fresh\n"
       + "/sessions - Manage sessions (switch, create, delete)\n"
       + "/rename <name> - Rename the current session\n"
-      + "/mode [agentic|tool] - Toggle between agentic and tool mode\n"
+      + "/mode [chat|tool] - Toggle between chat and tool mode\n"
       + "/tokens - Show token usage for this session\n"
       + "/export - Export session as JSON file\n"
       + "  Reply to a message with /export to export from that point"
@@ -139,13 +139,13 @@ export function registerHandlers(bot: Bot): void {
   bot.command("mode", async (ctx) => {
     const chatId = ctx.chat.id;
     const arg = ctx.match?.trim().toLowerCase();
-    if (arg === "agentic" || arg === "tool") {
+    if (arg === "chat" || arg === "tool") {
       await setChatMode(chatId, arg);
       await ctx.reply(`Mode switched to "${arg}".`);
     } else {
       const current = await getChatMode(chatId);
       await ctx.reply(
-        `Current mode: ${current}\n\nUse /mode agentic or /mode tool to switch.`
+        `Current mode: ${current}\n\nUse /mode chat or /mode tool to switch.`
       );
     }
   });
