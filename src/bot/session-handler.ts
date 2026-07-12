@@ -97,7 +97,16 @@ function formatTurns(turns: TurnRow[]): string {
   const lines = turns.map(turn => {
     const query = `${turn.query.slice(0, 60)}${turn.query.length > 60 ? "…" : ""}`;
     const ai = turn.summary ?? turn.raw ?? "";
-    return `Turn ${turn.turn_index + 1}:\nQ: ${query}\nA: ${ai}`;
+    let sourcesText = "";
+    if (turn.sources) {
+      try {
+        const sources = JSON.parse(turn.sources) as { title: string; url: string }[];
+        if (sources.length > 0) {
+          sourcesText = "\n\nSources:\n" + sources.map(s => `  - ${s.title} (${s.url})`).join("\n");
+        }
+      } catch {}
+    }
+    return `Turn ${turn.turn_index + 1}:\nQuery: ${query}\n\nAnswer: ${ai}${sourcesText}`;
   });
   const text = lines.join("\n\n");
   if (text.length > 3900) return text.slice(0, 3900) + "\n… (truncated)";

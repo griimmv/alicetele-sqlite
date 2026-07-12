@@ -1,6 +1,8 @@
 # AliceWiki Telegram Bot (SQLite)
 
-A Telegram bot that fetches Wikipedia articles via LLM. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
+![the pic is not mine](asset/alice-meme.png)
+
+A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
 
 ## Requirements
 
@@ -22,7 +24,7 @@ bun install
 bun run init-env
 
 # 3. Configure these on .env.local
-BOT_TOKEN=your_bot_token
+BOT_TOKEN=your_bot_token  # get telegram token from BotFather
 OPENAI_API_KEY=your_provider_token 
 
 # 4. Authenticate ngrok (free account required)
@@ -39,7 +41,7 @@ bun run ngrok
 # Same as the above one, but instead of adding ngrok
 # auth token and bun run ngrok, we do these instead.
 
-# 4. Configure WEBHOOK_URL on .env.local
+# 4. Configure WEBHOOK_URL with your domain/tunnel url on .env.local
 WEBHOOK_URL=...
 
 # 5. Then run it
@@ -93,7 +95,7 @@ src/
     ├── agent.ts          LLM agent loop — invokes LLM with tools, retry logic, timeout handling
     ├── llm.ts            ChatOpenAI instantiation
     ├── parser.ts         Extract JSON from LLM text responses
-    ├── tool-mode.ts      Direct (non-agentic) tool execution pathway
+    ├── tool-mode.ts      Direct (non-chat) tool execution pathway
     └── tools/
         ├── indextools.ts Tool registry array (shared by agent and tool-mode)
         └── wikipedia.ts  Wikipedia search tool (LangChain tool schema, with fallback search)
@@ -112,7 +114,7 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
                                                             │
                                             ┌───────────────┴───────────────┐
                                             │                               │
-                                        agentic                          tool
+                                        chat                          tool
                                             │                               │
                                       runAgent()                  setPendingQuery()
                                             │                         + show keyboard
@@ -146,13 +148,13 @@ sessions: id | name | chat_id | archived | mode | created_at
 ## Commands
 
 | Command | Description |
-|---|---|---|
+|---|---|
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
-| `/mode [agentic\|tool]` | Toggle between agentic (LLM-decides) and tool (manual pick) mode |
+| `/mode [chat\|tool]` | Toggle between chat (LLM-decides) and tool (manual pick) mode |
 | `/sessions` | Switch, rename, or delete sessions |
 | `/rename <name>` | Rename the current session |
 | `/end` | Archive current session and start a fresh one |
 | `/tokens` | Show input, output, and total token usage for the current session |
-| `/export` | Export session history as a JSON file. Reply to a message to export from that point, or pass a turn number/query text. |
-| Any text | Fetch Wikipedia article and get a structured summary with sources (agentic) or pick a tool (tool mode) |
+| `/export` | Export current session history as a JSON file. |
+| Any text | Fetch Wikipedia article and get a structured summary with sources (chat) or pick a tool (tool mode) |
