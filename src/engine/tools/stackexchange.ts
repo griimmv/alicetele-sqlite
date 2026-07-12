@@ -23,6 +23,9 @@ async function searchStackOverflow(query: string): Promise<StackExchangeResult> 
 
   try {
     const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Stack Exchange API returned ${response.status}: ${response.statusText}`);
+    }
     const data = await response.json() as {
       items?: { title: string; link: string; score: number }[];
     };
