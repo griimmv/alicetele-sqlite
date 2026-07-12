@@ -20,7 +20,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string, signal?:
   return Promise.race([promise, timeoutPromise, ...(abortPromise ? [abortPromise] : [])]).finally(() => clearTimeout(timer));
 }
 
-const SYSTEM_PROMPT = `You are a helpful assistant with access to Wikipedia. When the user asks about factual topics (people, places, history, concepts), use the wikipedia tool to look up the topic. For general chat or simple queries, answer directly.
+const SYSTEM_PROMPT = `You are a helpful assistant with access to Wikipedia and Stack Overflow. Use the wikipedia tool for factual topics (people, places, history, concepts). Use the stackoverflow tool for programming questions, coding errors, debugging, or technical software development topics. For general chat or simple queries, answer directly.
 
 Respond ONLY with valid JSON matching this schema, no other text:
 {
