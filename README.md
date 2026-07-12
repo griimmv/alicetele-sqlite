@@ -1,6 +1,8 @@
 # AliceWiki Telegram Bot (SQLite)
 
-A Telegram bot that fetches Wikipedia articles via LLM. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
+![the pic is not mine](asset/alice-meme.png)
+
+A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
 
 ## Requirements
 
@@ -22,7 +24,7 @@ bun install
 bun run init-env
 
 # 3. Configure these on .env.local
-BOT_TOKEN=your_bot_token
+BOT_TOKEN=your_bot_token  # get telegram token from BotFather
 OPENAI_API_KEY=your_provider_token 
 
 # 4. Authenticate ngrok (free account required)
@@ -39,7 +41,7 @@ bun run ngrok
 # Same as the above one, but instead of adding ngrok
 # auth token and bun run ngrok, we do these instead.
 
-# 4. Configure WEBHOOK_URL on .env.local
+# 4. Configure WEBHOOK_URL with your domain/tunnel url on .env.local
 WEBHOOK_URL=...
 
 # 5. Then run it
@@ -146,7 +148,7 @@ sessions: id | name | chat_id | archived | mode | created_at
 ## Commands
 
 | Command | Description |
-|---|---|---|
+|---|---|
 | `/start` | Welcome message and usage guide |
 | `/help` | Show available commands |
 | `/mode [agentic\|tool]` | Toggle between agentic (LLM-decides) and tool (manual pick) mode |
