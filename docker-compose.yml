@@ -2,6 +2,7 @@ services:
   bot:
     build: .
     image: ghcr.io/griimmv/alicetele-sqlite/alicetele-sqlite:latest
+    user: "1000:1000"
     container_name: alicetele-sqlite
     restart: unless-stopped
     ports:
