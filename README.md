@@ -47,8 +47,8 @@ WEBHOOK_URL=...
 
 # 5. Then run it
 bun run start
-```
 
+```
 ## Configuration
 
 | Variable | Required | Default | Description |
