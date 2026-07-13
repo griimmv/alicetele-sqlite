@@ -23,8 +23,7 @@ async function main() {
     await setWebhook(fullUrl, config.webhookSecret);
     console.log(`Webhook set to ${fullUrl}`);
   } else {
-    console.log("No WEBHOOK_URL set. Skipping webhook registration.");
-    console.log("Set WEBHOOK_URL or manually call bot.api.setWebhook(url).");
+    throw new Error("WEBHOOK_URL is not set. The bot cannot receive updates via webhook without it.");
   }
 
   app.listen(config.port, () => {

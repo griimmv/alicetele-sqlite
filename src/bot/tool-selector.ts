@@ -125,8 +125,8 @@ async function handleCancel(ctx: Context, chatId: number) {
   clearPendingQuery(chatId);
   try {
     await ctx.editMessageText("Cancelled.", { reply_markup: undefined });
-  } catch {
-    // ignore if message can't be edited
+  } catch (err) {
+    console.error("handleCancel edit error:", err);
   }
   await ctx.answerCallbackQuery();
 }
@@ -134,11 +134,17 @@ async function handleCancel(ctx: Context, chatId: number) {
 export function registerToolCallbacks(bot: Bot): void {
   bot.callbackQuery(new RegExp(`^${PREFIX}:`), async (ctx) => {
     const data = ctx.callbackQuery.data;
-    if (!data) return;
+    if (!data) {
+      await ctx.answerCallbackQuery({ text: "Invalid callback data." });
+      return;
+    }
 
     const chatId = ctx.chat?.id;
     const msgId = ctx.callbackQuery.message?.message_id;
-    if (!chatId || !msgId) return;
+    if (!chatId || !msgId) {
+      await ctx.answerCallbackQuery({ text: "Missing chat context." });
+      return;
+    }
 
     const action = data.slice(PREFIX.length + 1);
 

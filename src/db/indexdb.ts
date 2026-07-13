@@ -139,7 +139,7 @@ export async function saveTurn(
 }
 
 export async function getActiveSession(chatId: number): Promise<SessionRow | null> {
-  if (!db) return null;
+  if (!db) throw new Error("DB not initialized");
   return db.query(
     "SELECT * FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1"
   ).get(chatId) as SessionRow | null;
@@ -180,7 +180,7 @@ export async function deleteSession(sessionId: number): Promise<void> {
 }
 
 export async function getChatMode(chatId: number): Promise<string> {
-  if (!db) return "chat";
+  if (!db) throw new Error("DB not initialized");
   const row = db.query(
     "SELECT mode FROM sessions WHERE chat_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1"
   ).get(chatId) as { mode: string } | null;
