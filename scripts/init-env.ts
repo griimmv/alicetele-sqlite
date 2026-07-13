@@ -23,8 +23,14 @@ function isPlaceholder(value: string): boolean {
 // Restrict file to owner-only read/write (chmod 600 on Unix, icacls on Windows)
 function setFilePermissions(path: string) {
   if (process.platform === "win32") {
-    spawnSync("icacls", [path, "/reset"]);
-    spawnSync("icacls", [path, "/grant:r", `${process.env.USERNAME}:(F)`, "/inheritance:r"]);
+    const reset = spawnSync("icacls", [path, "/reset"]);
+    if (reset.status !== 0) {
+      throw new Error(`icacls /reset failed with status ${reset.status}: ${reset.stderr?.toString()}`);
+    }
+    const grant = spawnSync("icacls", [path, "/grant:r", `${process.env.USERNAME}:(F)`, "/inheritance:r"]);
+    if (grant.status !== 0) {
+      throw new Error(`icacls /grant failed with status ${grant.status}: ${grant.stderr?.toString()}`);
+    }
   } else {
     chmodSync(path, 0o600);
   }
