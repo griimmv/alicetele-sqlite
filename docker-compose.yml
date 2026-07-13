@@ -1,0 +1,11 @@
+services:
+  bot:
+    build: .
+    container_name: alicewiki-bot
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    volumes:
+      - ./data:/app/data
