@@ -9,6 +9,7 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 - **Telegram Bot Token** 
 - **OpenAI API Key** 
 - **ngrok** (optional)
+- **Docker** (optional)
 
 ## Installation
 > [!IMPORTANT]
@@ -33,7 +34,6 @@ ngrok config add-authtoken <your_token>
 
 # 5. Start the bot (auto-starts ngrok + registers webhook url in-memory + init DB)
 bun run ngrok
-
 ```
 
 ### If you don't want to use ngrok
@@ -47,8 +47,36 @@ WEBHOOK_URL=...
 
 # 5. Then run it
 bun run start
-
 ```
+
+### Use Docker prebuilt image
+
+```bash
+# 1. Download the compose file
+curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+
+# 2. Create data directory 
+mkdir data
+
+# 3. Create .env.local and configure it
+cat > .env.local << EOF
+BOT_TOKEN=your_bot_token
+OPENAI_API_KEY=your_openai_key
+WEBHOOK_SECRET=your_webhook_secret
+EOF
+
+# 4. Lock down .env.local permissions (only owner can read)
+chmod 600 .env.local
+
+# 5. Pull the image and start
+docker compose up -d
+```
+
+The SQLite database persists in `./data/` on your host machine.
+
+> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, `mkdir` works the same, and create `.env.local` with a text editor. Restrict permissions with `icacls .env.local /inheritance:r /grant "%USERNAME%:F"`.
+
+
 ## Configuration
 
 | Variable | Required | Default | Description |
@@ -70,6 +98,7 @@ bun run start
 | `bun run dev` | Run bot with file watching |
 | `bun run dev-ngrok` | Start ngrok tunnel + run bot with file watching |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
+
 
 ## Architecture
 

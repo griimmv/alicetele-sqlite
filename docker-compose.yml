@@ -1,7 +1,8 @@
 services:
   bot:
     build: .
-    container_name: alicewiki-bot
+    image: ghcr.io/griimmv/alicetele-sqlite/alicetele-sqlite:latest
+    container_name: alicetele-sqlite
     restart: unless-stopped
     ports:
       - "3000:3000"
