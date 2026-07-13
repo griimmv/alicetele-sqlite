@@ -39,8 +39,7 @@ export function registerHandlers(bot: Bot): void {
       + "/rename <name> - Rename the current session\n"
       + "/mode [chat|tool] - Toggle between chat and tool mode\n"
       + "/tokens - Show token usage for this session\n"
-      + "/export - Export session as JSON file\n"
-      + "  Reply to a message with /export to export from that point"
+      + "/export - Export current session as JSON file\n"
     );
   });
 

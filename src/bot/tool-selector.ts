@@ -5,7 +5,7 @@ import { parseJSONFromText } from "../engine/parser.ts";
 import { getOrCreateSession, saveTurn, renameSession } from "../db/indexdb.ts";
 import { loadConversationHistory } from "./session.ts";
 
-const PREFIX = "t";
+const PREFIX = "t"; // prefix to distinguish tool-picker callbacks (e.g. "t:wikipedia") from other inline keyboards callback
 
 const pendingQueries = new Map<number, string>();
 
