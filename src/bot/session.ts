@@ -51,12 +51,4 @@ function parseJSON(str: string | null): unknown {
   try { return JSON.parse(str); } catch { return str; }
 }
 
-export function findTurnByQuery(turns: TurnRow[], queryText: string): number | null {
-  const needle = queryText.trim().toLowerCase();
-  for (const t of turns) {
-    if (t.query.trim().toLowerCase() === needle) {
-      return t.turn_index;
-    }
-  }
-  return null;
-}
+
