@@ -62,7 +62,7 @@ mkdir data
 cat > .env.local << EOF
 BOT_TOKEN=your_bot_token
 OPENAI_API_KEY=your_openai_key
-WEBHOOK_SECRET=your_webhook_secret
+WEBHOOK_SECRET=$(openssl rand -hex 32)
 EOF
 
 # 4. Lock down .env.local permissions (only owner can read)
