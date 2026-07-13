@@ -4,7 +4,6 @@ import {
   listSessions,
   getSession,
   getSessionTurns,
-  getOrCreateSession,
   archiveSession,
   switchSession as switchDbSession,
   deleteSession as deleteDbSession,
@@ -286,12 +285,18 @@ async function handleNop(ctx: Context) {
 export function registerSessionCallbacks(bot: Bot): void {
   bot.callbackQuery(new RegExp(`^${PREFIX}:`), async (ctx) => {
     const data = ctx.callbackQuery.data;
-    if (!data) return;
+    if (!data) {
+      await ctx.answerCallbackQuery({ text: "Invalid callback data." });
+      return;
+    }
 
     const { action, args } = parseCb(data);
     const chatId = ctx.chat?.id;
     const msgId = ctx.callbackQuery.message?.message_id;
-    if (!chatId || !msgId) return;
+    if (!chatId || !msgId) {
+      await ctx.answerCallbackQuery({ text: "Missing chat context." });
+      return;
+    }
 
     switch (action) {
       case "switch":

@@ -1,6 +1,5 @@
 # AliceWiki Telegram Bot (SQLite)
-
-![the pic is not mine](asset/alice-meme.png)
+![the pic is not mine](asset/alice-meme.jpg)
 
 A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
 
@@ -10,8 +9,11 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 - **Telegram Bot Token** 
 - **OpenAI API Key** 
 - **ngrok** (optional)
+- **Docker** (optional)
 
 ## Installation
+> [!IMPORTANT]
+> Setup the telegram bot first and get the bot token from BotFather 
 
 ### Using ngrok
 
@@ -32,7 +34,6 @@ ngrok config add-authtoken <your_token>
 
 # 5. Start the bot (auto-starts ngrok + registers webhook url in-memory + init DB)
 bun run ngrok
-
 ```
 
 ### If you don't want to use ngrok
@@ -47,6 +48,34 @@ WEBHOOK_URL=...
 # 5. Then run it
 bun run start
 ```
+
+### Use Docker prebuilt image
+
+```bash
+# 1. Download the compose file
+curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+
+# 2. Create data directory 
+mkdir data
+
+# 3. Create .env.local and configure it
+cat > .env.local << EOF
+BOT_TOKEN=your_bot_token
+OPENAI_API_KEY=your_openai_key
+WEBHOOK_SECRET=$(openssl rand -hex 32)
+EOF
+
+# 4. Lock down .env.local permissions (only owner can read)
+chmod 600 .env.local
+
+# 5. Pull the image and start
+docker compose up -d
+```
+
+The SQLite database persists in `./data/` on your host machine.
+
+> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, `mkdir` works the same, and create `.env.local` with a text editor. Restrict permissions with `icacls .env.local /inheritance:r /grant "%USERNAME%:F"`.
+
 
 ## Configuration
 
@@ -70,35 +99,37 @@ bun run start
 | `bun run dev-ngrok` | Start ngrok tunnel + run bot with file watching |
 | `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
 
+
 ## Architecture
 
 ```text
 scripts/
-├── init-ngrok.ts         ngrok tunnel launcher + runs /src/index.ts
-└── init-env.ts           Generate .env.local with WEBHOOK_SECRET
+├── init-ngrok.ts          ngrok tunnel launcher + runs /src/index.ts
+└── init-env.ts            Generate .env.local with WEBHOOK_SECRET
 src/
-├── index.ts              Entry point — Express server, webhook registration, app bootstrap
+├── index.ts               Entry point — Express server, webhook registration, app bootstrap
 ├── lib/
-│   └── config.ts         Env var loading and validation
+│   └── config.ts          Env var loading and validation
 ├── bot/
-│   ├── client.ts         Grammy Bot instance, webhook callback handler, setWebhook()
-│   ├── handlers.ts       Telegram command and message handlers (mode dispatch, /start, /help, etc.)
-│   ├── session.ts        Conversation history loading, export building, turn matching
+│   ├── client.ts          Grammy Bot instance, webhook callback handler, setWebhook()
+│   ├── handlers.ts        Telegram command and message handlers (mode dispatch, /start, /help, etc.)
+│   ├── session.ts         Conversation history loading, export building, turn matching
 │   ├── session-handler.ts Session management inline keyboard UI (/sessions)
-│   └── tool-selector.ts  Tool selection keyboard, pending query store, tool callback dispatch
+│   └── tool-selector.ts   Tool selection keyboard, pending query store, tool callback dispatch
 ├── routes/
-│   └── webhook.ts        Express router — POST /api/webhook
+│   └── webhook.ts         Express router — POST /api/webhook
 ├── db/
-│   ├── index.ts          SQLite via bun:sqlite — init, session/turn CRUD, auto-migration
-│   └── schema.sql        Reference SQL schema
+│   ├── indexdb.ts           SQLite via bun:sqlite — init, session/turn CRUD, auto-migration
+│   └── schema.sql         Reference SQL schema
 └── engine/
-    ├── agent.ts          LLM agent loop — invokes LLM with tools, retry logic, timeout handling
-    ├── llm.ts            ChatOpenAI instantiation
-    ├── parser.ts         Extract JSON from LLM text responses
-    ├── tool-mode.ts      Direct (non-chat) tool execution pathway
+    ├── agent.ts           LLM agent loop — invokes LLM with tools, retry logic, timeout handling
+    ├── llm.ts             ChatOpenAI instantiation
+    ├── parser.ts          Extract JSON from LLM text responses
+    ├── tool-mode.ts       Direct (non-chat) tool execution pathway
     └── tools/
-        ├── indextools.ts Tool registry array (shared by agent and tool-mode)
-        └── wikipedia.ts  Wikipedia search tool (LangChain tool schema, with fallback search)
+        ├── indextools.ts     Tool registry — tool definitions, lookup, and output formatting
+        ├── stackexchange.ts  Stack Overflow search tool (Stack Exchange API v2.3)
+        └── wikipedia.ts      Wikipedia search tool (LangChain tool schema, with fallback search)
 ```
 
 ### Data flow
@@ -114,15 +145,15 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
                                                             │
                                             ┌───────────────┴───────────────┐
                                             │                               │
-                                        chat                          tool
+                                        chat mode                     tool-only mode
                                             │                               │
-                                      runAgent()                  setPendingQuery()
+                                        runAgent()                   setPendingQuery()
                                             │                         + show keyboard
-                                    LangChain + OpenAI                     │
-                                            │                    [user clicks button]
-                                      wikipediaTool                        │
-                                    (fetch + search)               runToolMode()
-                                            │                     (wikipediaTool)
+                                    LangChain + OpenAI                      │
+                                            │                       [user clicks button]
+                                       toolRegistry                         │
+                                     (fetch + search)                  runToolMode()
+                                            │                      (toolRegistry.lookup)
                                             │                               │
                                             └───────────────┬───────────────┘
                                                             │
@@ -157,4 +188,4 @@ sessions: id | name | chat_id | archived | mode | created_at
 | `/end` | Archive current session and start a fresh one |
 | `/tokens` | Show input, output, and total token usage for the current session |
 | `/export` | Export current session history as a JSON file. |
-| Any text | Fetch Wikipedia article and get a structured summary with sources (chat) or pick a tool (tool mode) |
+| Any text | Search Wikipedia or Stack Overflow via LLM (chat mode) or pick a tool manually (tool mode) |

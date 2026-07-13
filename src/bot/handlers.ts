@@ -3,7 +3,7 @@ import { createAgent, runAgent } from "../engine/agent.ts";
 import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
 import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/indexdb.ts";
-import { loadConversationHistory, buildExportData, findTurnByQuery } from "./session.ts";
+import { loadConversationHistory, buildExportData } from "./session.ts";
 import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
 import { buildToolKeyboard, setPendingQuery, registerToolCallbacks } from "./tool-selector.ts";
 
@@ -39,8 +39,7 @@ export function registerHandlers(bot: Bot): void {
       + "/rename <name> - Rename the current session\n"
       + "/mode [chat|tool] - Toggle between chat and tool mode\n"
       + "/tokens - Show token usage for this session\n"
-      + "/export - Export session as JSON file\n"
-      + "  Reply to a message with /export to export from that point"
+      + "/export - Export current session as JSON file\n"
     );
   });
 
@@ -53,34 +52,8 @@ export function registerHandlers(bot: Bot): void {
   bot.command("export", async (ctx) => {
     const chatId = ctx.chat.id;
     const session = await getOrCreateSession(chatId);
-    let fromIndex: number | undefined;
 
-    // Check if replying to a message
-    const replyTo = ctx.message?.reply_to_message;
-    if (replyTo && "text" in replyTo && replyTo.text) {
-      const turns = await getSessionTurns(session.id);
-      const idx = findTurnByQuery(turns, replyTo.text);
-      if (idx !== null) {
-        fromIndex = idx;
-      }
-    } else {
-      // Check for argument (number or quoted text)
-      const arg = ctx.match?.trim();
-      if (arg) {
-        const num = Number(arg);
-        if (!isNaN(num)) {
-          fromIndex = num;
-        } else {
-          const turns = await getSessionTurns(session.id);
-          const idx = findTurnByQuery(turns, arg.replace(/["']/g, ""));
-          if (idx !== null) {
-            fromIndex = idx;
-          }
-        }
-      }
-    }
-
-    const turns = await getSessionTurns(session.id, fromIndex);
+    const turns = await getSessionTurns(session.id);
     if (turns.length === 0) {
       await ctx.reply("No turns to export.");
       return;
@@ -91,10 +64,7 @@ export function registerHandlers(bot: Bot): void {
     const buffer = Buffer.from(json, "utf-8");
 
     const file = new InputFile(buffer, `alicewiki-${session.name}-${session.id}.json`);
-    await ctx.replyWithDocument(
-      file,
-      { caption: fromIndex !== undefined ? `Exported from turn ${fromIndex} (${turns[0].query.slice(0, 40)}...)` : "Full session export" }
-    );
+    await ctx.replyWithDocument(file, { caption: "Full session export" });
   });
 
   bot.command("sessions", async (ctx) => {

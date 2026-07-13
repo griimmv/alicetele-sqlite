@@ -33,7 +33,7 @@ export function createAgent(llm: any) {
   return { llm, tools: toolRegistry.map(entry => entry.tool) };
 }
 
-export interface TokenUsage {
+interface TokenUsage {
   input: number;
   output: number;
   total: number;
@@ -72,7 +72,12 @@ export async function runAgent(
         ? result.content
         : Array.isArray(result.content)
           ? result.content
-              .map((block: any) => (typeof block === "string" ? block : block?.text ?? ""))
+              .map((block: any) => {
+                if (typeof block === "string") return block;
+                if (block?.text) return block.text;
+                console.warn("Unexpected LLM content block:", JSON.stringify(block));
+                return "";
+              })
               .join("")
           : String(result.content ?? result);
 
