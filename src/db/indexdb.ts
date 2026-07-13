@@ -195,7 +195,7 @@ export async function setChatMode(chatId: number, mode: string): Promise<void> {
   );
 }
 
-export async function closeDB(): Promise<void> {
+async function closeDB(): Promise<void> {
   if (db) {
     db.close();
     db = null;

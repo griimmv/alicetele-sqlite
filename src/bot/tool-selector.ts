@@ -13,11 +13,11 @@ export function setPendingQuery(chatId: number, query: string): void {
   pendingQueries.set(chatId, query);
 }
 
-export function getPendingQuery(chatId: number): string | undefined {
+function getPendingQuery(chatId: number): string | undefined {
   return pendingQueries.get(chatId);
 }
 
-export function clearPendingQuery(chatId: number): void {
+function clearPendingQuery(chatId: number): void {
   pendingQueries.delete(chatId);
 }
 

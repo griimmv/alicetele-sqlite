@@ -4,7 +4,6 @@ import {
   listSessions,
   getSession,
   getSessionTurns,
-  getOrCreateSession,
   archiveSession,
   switchSession as switchDbSession,
   deleteSession as deleteDbSession,

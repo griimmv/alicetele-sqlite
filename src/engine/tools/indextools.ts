@@ -3,13 +3,13 @@ import { stackoverflowTool, type StackExchangeResult } from "./stackexchange.ts"
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import { parseJSONFromText } from "../parser.ts";
 
-export interface ToolOutput {
+interface ToolOutput {
   summary: string;
   quotes: { text: string; source: string; url: string }[];
   sources: { title: string; url: string }[];
 }
 
-export interface ToolEntry {
+interface ToolEntry {
   tool: StructuredToolInterface;
   formatOutput(raw: string, query: string): ToolOutput;
 }
@@ -63,6 +63,4 @@ export const toolRegistry: ToolEntry[] = [
   },
 ];
 
-export function getToolEntry(name: string): ToolEntry | undefined {
-  return toolRegistry.find(entry => entry.tool.name === name);
-}
+

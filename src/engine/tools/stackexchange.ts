@@ -3,7 +3,7 @@ import { z } from "zod";
 
 const SEARCH_TIMEOUT = 15000;
 
-export interface StackExchangeItem {
+interface StackExchangeItem {
   title: string;
   url: string;
   score: number;

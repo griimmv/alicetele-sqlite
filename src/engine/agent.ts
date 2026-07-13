@@ -33,7 +33,7 @@ export function createAgent(llm: any) {
   return { llm, tools: toolRegistry.map(entry => entry.tool) };
 }
 
-export interface TokenUsage {
+interface TokenUsage {
   input: number;
   output: number;
   total: number;
