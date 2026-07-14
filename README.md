@@ -1,5 +1,7 @@
 # AliceWiki Telegram Bot (SQLite)
-![the pic is not mine](asset/alice-meme.jpg) ![alice1](asset/alice1.png) ![alice2](asset/alice2.png)
+<img src="asset/alice-meme.jpg" alt="alice meme" width="300"> 
+<img src="asset/alice1.png" alt="alice1" width="300"> 
+<img src="asset/alice2.png" alt="alice2" width="300">
 
 A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
 
