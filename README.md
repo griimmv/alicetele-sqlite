@@ -1,5 +1,5 @@
 # AliceWiki Telegram Bot (SQLite)
-![the pic is not mine](asset/alice-meme.jpg)
+![the pic is not mine](asset/alice-meme.jpg) ![alice1](asset/alice1.png) ![alice2](asset/alice2.png)
 
 A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
 
@@ -26,7 +26,7 @@ bun install
 bun run init-env
 
 # 3. Configure these on .env.local
-BOT_TOKEN=your_bot_token  # get telegram token from BotFather
+BOT_TOKEN=your_bot_token  
 OPENAI_API_KEY=your_provider_token 
 
 # 4. Authenticate ngrok (free account required)
@@ -55,7 +55,7 @@ bun run start
 # 1. Download the compose file
 curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
 
-# 2. Create data directory 
+# 2. Create data directory for db
 mkdir data
 
 # 3. Create .env.local and configure it
@@ -63,7 +63,9 @@ cat > .env.local << EOF
 BOT_TOKEN=your_bot_token
 OPENAI_API_KEY=your_openai_key
 WEBHOOK_SECRET=$(openssl rand -hex 32)
+WEBHOOK_URL=your_public_url
 EOF
+# you have to config WEBHOOK_URL manually whether you're using ngrok or not 
 
 # 4. Lock down .env.local permissions (only owner can read)
 chmod 600 .env.local
@@ -74,6 +76,7 @@ docker compose up -d
 
 The SQLite database persists in `./data/` on your host machine.
 
+> [!NOTE]
 > **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, `mkdir` works the same, and create `.env.local` with a text editor. Restrict permissions with `icacls .env.local /inheritance:r /grant "%USERNAME%:F"`.
 
 

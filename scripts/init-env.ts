@@ -71,7 +71,7 @@ function main() {
     "PORT=3000",
     `WEBHOOK_SECRET=${secret}`,
     "",
-    "WEBHOOK_URL= # if you'll use ngrok, don't worry about this as ngrok generates its own url",
+    "WEBHOOK_URL=   # if you'll use ngrok, don't worry about this as ngrok generates its own url",
   ].join("\n"));
   setFilePermissions(ENV_PATH);
   console.log("Created .env.local with a generated WEBHOOK_SECRET.");
