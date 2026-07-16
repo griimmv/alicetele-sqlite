@@ -7,51 +7,16 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 
 ## Requirements
 
-- **Bun** >= 1.0 
 - **Telegram Bot Token** 
 - **OpenAI API Key** 
-- **ngrok** (optional)
-- **Docker** (optional)
 
 ## Installation
 > [!IMPORTANT]
 > Setup the telegram bot first and get the bot token from BotFather 
 
-### Using ngrok
+### Docker (production)
 
-```bash
-# 1. Clone repo
-git clone https://github.com/griimmv/alicetele-sqlite.git && cd alicetele-sqlite
-bun install
-
-# 2. Generate .env.local with a WEBHOOK_SECRET
-bun run init-env
-
-# 3. Configure these on .env.local
-BOT_TOKEN=your_bot_token  
-OPENAI_API_KEY=your_provider_token 
-
-# 4. Authenticate ngrok (free account required)
-ngrok config add-authtoken <your_token>
-
-# 5. Start the bot (auto-starts ngrok + registers webhook url in-memory + init DB)
-bun run ngrok
-```
-
-### If you don't want to use ngrok
-
-```bash
-# Same as the above one, but instead of adding ngrok
-# auth token and bun run ngrok, we do these instead.
-
-# 4. Configure WEBHOOK_URL with your domain/tunnel url on .env.local
-WEBHOOK_URL=...
-
-# 5. Then run it
-bun run start
-```
-
-### Use Docker prebuilt image
+Pull the prebuilt image from GHCR — no Bun or Node.js needed on your machine.
 
 ```bash
 # 1. Download the compose file
@@ -67,7 +32,6 @@ OPENAI_API_KEY=your_openai_key
 WEBHOOK_SECRET=$(openssl rand -hex 32)
 WEBHOOK_URL=your_public_url
 EOF
-# you have to config WEBHOOK_URL manually whether you're using ngrok or not 
 
 # 4. Lock down .env.local permissions (only owner can read)
 chmod 600 .env.local
@@ -79,7 +43,38 @@ docker compose up -d
 The SQLite database persists in `./data/` on your host machine.
 
 > [!NOTE]
-> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, `mkdir` works the same, and create `.env.local` with a text editor. Restrict permissions with `icacls .env.local /inheritance:r /grant "%USERNAME%:F"`.
+> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, and create `.env.local` with a text editor.
+
+### Git clone (development)
+
+```bash
+# 1. Clone repo
+git clone https://github.com/griimmv/alicetele-sqlite.git && cd alicetele-sqlite
+bun install
+
+# 2. Generate .env.local with a WEBHOOK_SECRET
+bun run init-env
+
+# 3. Configure these on .env.local
+BOT_TOKEN=your_bot_token
+OPENAI_API_KEY=your_openai_key
+```
+
+**With ngrok (recommended for dev):**
+```bash
+# 4. Authenticate ngrok (free account required)
+ngrok config add-authtoken <your_token>
+
+# 5. Start the bot (auto-starts ngrok + registers webhook url in-memory + init DB)
+bun run ngrok
+```
+
+**With a custom domain (no ngrok):**
+```bash
+# 4. Set WEBHOOK_URL in .env.local to your public HTTPS URL
+# 5. Then run it
+bun run start
+```
 
 
 ## Configuration
