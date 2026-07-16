@@ -25,15 +25,11 @@ curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-c
 # 2. Create directories for db and env
 mkdir -p alicetele/data
 
-# 3. Create ./alicetele/.env.local and configure it
-cat > ./alicetele/.env.local << EOF
-BOT_TOKEN=your_bot_token
-OPENAI_API_KEY=your_openai_key
-WEBHOOK_SECRET=$(openssl rand -hex 32)
-WEBHOOK_URL=your_public_url
-EOF
+# 3. Download .env.example as your .env.local and edit it
+curl -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
+#   Edit ./alicetele/.env.local — fill in BOT_TOKEN, OPENAI_API_KEY, WEBHOOK_URL
 
-# 4. Lock down ./alicetele/.env.local permissions (only owner can read)
+# 4. Lock down permissions (only owner can read)
 chmod 600 ./alicetele/.env.local
 
 # 5. Pull the image and start
@@ -43,7 +39,7 @@ docker compose up -d
 The SQLite database persists in `./alicetele/data/` on your host machine.
 
 > [!NOTE]
-> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, and create `./alicetele/.env.local` with a text editor.
+> **Windows users:** use PowerShell — replace `curl` with `curl.exe`, and edit `./alicetele/.env.local` with a text editor.
 
 ### Git clone (development)
 
