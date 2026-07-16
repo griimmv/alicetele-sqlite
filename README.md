@@ -40,7 +40,7 @@ chmod 600 .env.local
 docker compose up -d
 ```
 
-The SQLite database persists in `./data/` on your host machine.
+The SQLite database persists in `./alicetele/data/` on your host machine.
 
 > [!NOTE]
 > **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, and create `.env.local` with a text editor.
@@ -83,7 +83,7 @@ bun run start
 |---|---|---|---|
 | `BOT_TOKEN` | Yes | — | Telegram bot token from [@BotFather](https://t.me/botfather) |
 | `OPENAI_API_KEY` | Yes | — | OpenAI API key |
-| `DATABASE_PATH` | Yes | `./data/alicewiki.db` | Path to SQLite database file |
+| `DATABASE_PATH` | Yes | `./alicetele/data/alicewiki.db` | Path to SQLite database file |
 | `PORT` | Yes | `3000` | Port for the Express server |
 | `OPENAI_MODEL` | Yes | `gpt-5.4-mini` | OpenAI model name |
 | `WEBHOOK_URL` | Yes | — | Public HTTPS URL for Telegram webhook (if you use ngrok, don't worry about this)|
@@ -165,7 +165,7 @@ Telegram ──HTTPS──> Domain ──> Express (port 3000)
 
 ### Database
 
-SQLite file stored at `DATABASE_PATH` (default: `./data/alicewiki.db`). Tables are auto-created on first run.
+SQLite file stored at `DATABASE_PATH` (default: `./alicetele/data/alicewiki.db`). Tables are auto-created on first run.
 
 ```sql
 sessions: id | name | chat_id | archived | mode | created_at

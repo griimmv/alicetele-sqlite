@@ -67,7 +67,7 @@ function main() {
   writeFileSync(ENV_PATH, [
     "BOT_TOKEN=",
     "OPENAI_API_KEY=",
-    "DATABASE_PATH=./data/alicewiki.db",
+    "DATABASE_PATH=./alicetele/data/alicewiki.db",
     "PORT=3000",
     `WEBHOOK_SECRET=${secret}`,
     "",

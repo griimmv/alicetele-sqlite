@@ -10,4 +10,4 @@ services:
     env_file:
       - .env.local
     volumes:
-      - ./data:/app/data
+      - ./alicetele/data:/app/data
