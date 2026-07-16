@@ -1,15 +1,8 @@
-FROM oven/bun:1-alpine AS base
-
+FROM alpine:latest
+RUN addgroup -g 1000 -S app && adduser -u 1000 -S app -G app
 WORKDIR /app
-
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
-
-COPY . .
-
-RUN mkdir -p /app/data && chown -R bun:bun /app/data
-USER bun
-
+COPY alicetele-bot .
+RUN chmod +x alicetele-bot && mkdir -p /app/data && chown -R app:app /app/data
+USER app
 EXPOSE 3000
-
-CMD ["bun", "run", "src/index.ts"]
+CMD ["./alicetele-bot"]
