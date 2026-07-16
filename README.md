@@ -22,19 +22,19 @@ Pull the prebuilt image from GHCR — no Bun or Node.js needed on your machine.
 # 1. Download the compose file
 curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
 
-# 2. Create data directory for db
-mkdir data
+# 2. Create directories for db and env
+mkdir -p alicetele/data
 
-# 3. Create .env.local and configure it
-cat > .env.local << EOF
+# 3. Create ./alicetele/.env.local and configure it
+cat > ./alicetele/.env.local << EOF
 BOT_TOKEN=your_bot_token
 OPENAI_API_KEY=your_openai_key
 WEBHOOK_SECRET=$(openssl rand -hex 32)
 WEBHOOK_URL=your_public_url
 EOF
 
-# 4. Lock down .env.local permissions (only owner can read)
-chmod 600 .env.local
+# 4. Lock down ./alicetele/.env.local permissions (only owner can read)
+chmod 600 ./alicetele/.env.local
 
 # 5. Pull the image and start
 docker compose up -d
@@ -43,7 +43,7 @@ docker compose up -d
 The SQLite database persists in `./alicetele/data/` on your host machine.
 
 > [!NOTE]
-> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, and create `.env.local` with a text editor.
+> **Windows users:** use PowerShell — replace `curl -O` with `curl.exe -O`, and create `./alicetele/.env.local` with a text editor.
 
 ### Git clone (development)
 
@@ -52,10 +52,10 @@ The SQLite database persists in `./alicetele/data/` on your host machine.
 git clone https://github.com/griimmv/alicetele-sqlite.git && cd alicetele-sqlite
 bun install
 
-# 2. Generate .env.local with a WEBHOOK_SECRET
+# 2. Generate ./alicetele/.env.local with a WEBHOOK_SECRET
 bun run init-env
 
-# 3. Configure these on .env.local
+# 3. Configure these on ./alicetele/.env.local
 BOT_TOKEN=your_bot_token
 OPENAI_API_KEY=your_openai_key
 ```
@@ -71,7 +71,7 @@ bun run ngrok
 
 **With a custom domain (no ngrok):**
 ```bash
-# 4. Set WEBHOOK_URL in .env.local to your public HTTPS URL
+# 4. Set WEBHOOK_URL in ./alicetele/.env.local to your public HTTPS URL
 # 5. Then run it
 bun run start
 ```
@@ -97,7 +97,7 @@ bun run start
 | `bun run ngrok` | Start ngrok tunnel + run bot |
 | `bun run dev` | Run bot with file watching |
 | `bun run dev-ngrok` | Start ngrok tunnel + run bot with file watching |
-| `bun run init-env` | Create `.env.local` with a generated `WEBHOOK_SECRET` |
+| `bun run init-env` | Create `./alicetele/.env.local` with a generated `WEBHOOK_SECRET` |
 
 
 ## Architecture
@@ -105,7 +105,7 @@ bun run start
 ```text
 scripts/
 ├── init-ngrok.ts          ngrok tunnel launcher + runs /src/index.ts
-└── init-env.ts            Generate .env.local with WEBHOOK_SECRET
+└── init-env.ts            Generate ./alicetele/.env.local with WEBHOOK_SECRET
 src/
 ├── index.ts               Entry point — Express server, webhook registration, app bootstrap
 ├── lib/

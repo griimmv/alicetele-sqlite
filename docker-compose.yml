@@ -8,6 +8,6 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.local
+      - ./alicetele/.env.local
     volumes:
       - ./alicetele/data:/app/data

@@ -1,5 +1,5 @@
 node_modules/
-.env.local
+alicetele/.env.local
 dist/
 *.db
 *.db-wal
