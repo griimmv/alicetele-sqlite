@@ -1,9 +1,8 @@
-<img src="asset/alice-meme.jpg" alt="alice meme" width="100"> 
 
 # AliceWiki Telegram Bot (SQLite)
-<img src="asset/alice1.png" alt="alice1" width="400"> <img src="asset/alice2.png" alt="alice2" width="400">
 
 A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
+<img src="asset/alice1.png" alt="alice1" width="400"> <img src="asset/alice2.png" alt="alice2" width="400">
 
 ## Requirements
 
@@ -19,24 +18,32 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 ```bash
 # Linux / macOS
 curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+
 mkdir -p alicetele/data
+
 curl -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
+
 echo "WEBHOOK_SECRET=$(openssl rand -hex 32)" >> ./alicetele/.env.local
+
 chmod 600 ./alicetele/.env.local
+
 docker compose up -d
 ```
 
 ```powershell
 # Windows
 curl.exe -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+
 mkdir alicetele/data -Force
+
 curl.exe -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
+
 powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower(); Add-Content ./alicetele/.env.local ('WEBHOOK_SECRET=' + $s)"
+
 docker compose up -d
 ```
 
 After all those, edit ./alicetele/.env.local and fill BOT_TOKEN, OPENAI_API_KEY, and WEBHOOK_URL.
-The SQLite database persists in `./alicetele/data/` on your host machine.
 
 ### Git clone (development)
 
