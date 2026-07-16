@@ -1,6 +1,6 @@
 services:
   bot:
-    image: ghcr.io/griimmv/alicetele-sqlite/alicetele-sqlite:latest
+    image: ghcr.io/griimmv/alicetele-sqlite:latest
     user: "1000:1000"
     container_name: alicetele-sqlite
     restart: unless-stopped
