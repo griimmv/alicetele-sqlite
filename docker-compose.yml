@@ -9,5 +9,7 @@ services:
       - "3000:3000"
     env_file:
       - ./alicetele/.env.local
+    environment:
+      DATABASE_PATH: /app/data/alicewiki.db
     volumes:
       - ./alicetele/data:/app/data
