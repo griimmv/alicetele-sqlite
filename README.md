@@ -31,7 +31,7 @@ docker compose up -d
 curl.exe -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
 mkdir alicetele/data -Force
 curl.exe -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
-powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower(); Add-Content ./alicetele/.env.local "WEBHOOK_SECRET=$s""
+powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower(); Add-Content ./alicetele/.env.local ('WEBHOOK_SECRET=' + $s)"
 docker compose up -d
 ```
 
