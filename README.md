@@ -2,7 +2,7 @@
 # AliceWiki Telegram Bot (SQLite)
 
 A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh). 
-<br>
+<br><br>
 <img src="asset/alice1.png" alt="alice1" width="400"> <img src="asset/alice2.png" alt="alice2" width="400">
 
 <br>
@@ -22,35 +22,39 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 
 ```bash
 # Linux / macOS
-curl -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+mkdir -p alicetele/data && cd alicetele
 
-mkdir -p alicetele/data
+curl -o docker-compose.yml https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose-prod.yml
+curl -o .env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
 
-curl -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
+# generates random hex for WEBHOOK_SECRET
+echo "WEBHOOK_SECRET=$(openssl rand -hex 32)" >> .env.local
 
-echo "WEBHOOK_SECRET=$(openssl rand -hex 32)" >> ./alicetele/.env.local
+# secures the .env.local
+chmod 600 ./alicetele/.env.local
 
 # Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY on .env.local
 
-chmod 600 ./alicetele/.env.local
-
+# pulls image and starts container
 docker compose up -d
 ```
 
 ```powershell
 # Windows
-curl.exe -O https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose.yml
+mkdir alicetele/data -Force && cd alicetele
 
-mkdir alicetele/data -Force
+curl.exe -o docker-compose.yml https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/docker-compose-prod.yml
+curl.exe -o .env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
 
-curl.exe -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicetele-sqlite/main/.env.example
+# generates random hex for WEBHOOK_SECRET
+powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower(); Add-Content .env.local ('WEBHOOK_SECRET=' + $s)"
 
-powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower(); Add-Content ./alicetele/.env.local ('WEBHOOK_SECRET=' + $s)"
-
-icacls .\alicetele\.env.local /inheritance:r /grant "%USERNAME%:(R,W)"
+# secures the .env.local
+icacls .env.local /inheritance:r /grant "%USERNAME%:(R,W)"
 
 # Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY on .env.local
 
+# pulls image and starts container
 docker compose up -d
 ```
 
