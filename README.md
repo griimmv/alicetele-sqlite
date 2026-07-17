@@ -1,7 +1,8 @@
 
 # AliceWiki Telegram Bot (SQLite)
 
-A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh).
+A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with optional LLM support. Built with [Grammy](https://grammy.dev), [LangChain](https://js.langchain.com), [Express](https://expressjs.com) and [Bun](https://bun.sh). 
+<br>
 <img src="asset/alice1.png" alt="alice1" width="400"> <img src="asset/alice2.png" alt="alice2" width="400">
 
 
