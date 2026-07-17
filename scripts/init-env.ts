@@ -3,7 +3,7 @@ import { spawnSync } from "child_process";
 import { randomBytes } from "crypto";
 import { resolve } from "path";
 
-const ENV_PATH = resolve(import.meta.dir, "..", ".env.local");
+const ENV_PATH = resolve(import.meta.dir, "..", "alicetele", ".env.local");
 
 function generateSecret(): string {
   return randomBytes(32).toString("hex");
@@ -44,7 +44,7 @@ function main() {
 
     // if valid secret is present — nothing to do
     if (existing && !isPlaceholder(existing)) {
-      console.log("WEBHOOK_SECRET already set in .env.local — skipping.");
+      console.log("WEBHOOK_SECRET already set in ./alicetele/.env.local — skipping.");
       return;
     }
 
@@ -58,24 +58,24 @@ function main() {
       appendFileSync(ENV_PATH, `\nWEBHOOK_SECRET=${secret}\n`);
       setFilePermissions(ENV_PATH);
     }
-    console.log("Generated WEBHOOK_SECRET and saved to .env.local");
+    console.log("Generated WEBHOOK_SECRET and saved to ./alicetele/.env.local");
     return;
   }
 
-  // if there's no .env.local yet, create one with a fresh secret
+  // if there's no ./alicetele/.env.local yet, create one with a fresh secret
   const secret = generateSecret();
   writeFileSync(ENV_PATH, [
     "BOT_TOKEN=",
     "OPENAI_API_KEY=",
-    "DATABASE_PATH=./data/alicewiki.db",
+    "DATABASE_PATH=./alicetele/data/alicewiki.db",
     "PORT=3000",
     `WEBHOOK_SECRET=${secret}`,
     "",
     "WEBHOOK_URL=   # if you'll use ngrok, don't worry about this as ngrok generates its own url",
   ].join("\n"));
   setFilePermissions(ENV_PATH);
-  console.log("Created .env.local with a generated WEBHOOK_SECRET.");
-  console.log("Fill in BOT_TOKEN and OPENAI_API_KEY to get started.");
+  console.log("Created ./alicetele/.env.local with a generated WEBHOOK_SECRET.");
+  console.log("Fill in BOT_TOKEN and OPENAI_API_KEY in ./alicetele/.env.local to get started.");
 }
 
 main();

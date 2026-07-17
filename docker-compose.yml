@@ -1,13 +1,14 @@
 services:
   bot:
-    build: .
-    image: ghcr.io/griimmv/alicetele-sqlite/alicetele-sqlite:latest
+    image: ghcr.io/griimmv/alicetele-sqlite:latest
     user: "1000:1000"
     container_name: alicetele-sqlite
     restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
-      - .env.local
+      - ./alicetele/.env.local
+    environment:
+      DATABASE_PATH: /app/data/alicewiki.db
     volumes:
-      - ./data:/app/data
+      - ./alicetele/data:/app/data
