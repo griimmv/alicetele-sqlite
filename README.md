@@ -30,7 +30,7 @@ curl -o ./alicetele/.env.local https://raw.githubusercontent.com/griimmv/alicete
 
 echo "WEBHOOK_SECRET=$(openssl rand -hex 32)" >> ./alicetele/.env.local
 
-# Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY
+# Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY on .env.local
 
 chmod 600 ./alicetele/.env.local
 
@@ -49,7 +49,7 @@ powershell -c "$s=[System.Convert]::ToHexString([System.Security.Cryptography.Ra
 
 icacls .\alicetele\.env.local /inheritance:r /grant "%USERNAME%:(R,W)"
 
-# Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY
+# Fill in BOT_TOKEN, WEBHOOK_URL (your public url that telegram can webhook to), and OPENAI_API_KEY on .env.local
 
 docker compose up -d
 ```
