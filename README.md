@@ -11,6 +11,8 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 
 - **Telegram Bot Token** 
 - **OpenAI API Key** 
+- **WEBHOOK_URL** 
+ 
 
 <br>
 
