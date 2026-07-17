@@ -75,7 +75,8 @@ function main() {
   ].join("\n"));
   setFilePermissions(ENV_PATH);
   console.log("Created ./alicetele/.env.local with a generated WEBHOOK_SECRET.");
-  console.log("Fill in BOT_TOKEN and OPENAI_API_KEY in ./alicetele/.env.local to get started.");
+  console.log("Fill in BOT_TOKEN in ./alicetele/.env.local to get started.");
+  console.log("Set OPENAI_API_KEY for LLM features (optional — tool mode works without it).");
 }
 
 main();

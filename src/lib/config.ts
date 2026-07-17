@@ -1,6 +1,5 @@
 const required = {
   BOT_TOKEN: process.env.BOT_TOKEN,
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 };
 
 const missing = Object.entries(required).filter(([, value]) => !value).map(([key]) => key);
@@ -10,7 +9,7 @@ if (missing.length > 0) {
 
 export const config = {
   botToken: process.env.BOT_TOKEN!,
-  openaiApiKey: process.env.OPENAI_API_KEY!,
+  openaiApiKey: process.env.OPENAI_API_KEY || undefined,
   databasePath: process.env.DATABASE_PATH || "./alicetele/data/alicewiki.db",
   port: Number(process.env.PORT) || 3000,
   openaiModel: process.env.OPENAI_MODEL || "gpt-5.4-mini",

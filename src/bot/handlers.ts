@@ -18,6 +18,7 @@ let agent: ReturnType<typeof createAgent> | null = null;
 function getAgent() {
   if (!agent) {
     const llm = createLLM();
+    if (!llm) return null;
     agent = createAgent(llm);
   }
   return agent;
@@ -143,7 +144,17 @@ export function registerHandlers(bot: Bot): void {
         return;
       }
 
-      const { content, tokens } = await runAgent(getAgent(), query, history);
+      const agent = getAgent();
+      if (!agent) {
+        await ctx.reply(
+          "⚠️ Chat mode requires an OpenAI API key.\n\n"
+          + "Use /mode tool to search Wikipedia and Stack Overflow directly, "
+          + "or set OPENAI_API_KEY in your .env.local and restart."
+        );
+        return;
+      }
+
+      const { content, tokens } = await runAgent(agent, query, history);
       const parsed = parseJSONFromText(content) as ParsedResponse | null;
 
       await saveTurn(session.id, {
