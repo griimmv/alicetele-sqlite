@@ -11,6 +11,8 @@ A Telegram bot that fetches Wikipedia articles and Stack Overflow answers, with 
 
 - **Telegram Bot Token** 
 - **OpenAI API Key** 
+- **WEBHOOK_URL** 
+ 
 
 <br>
 
@@ -59,8 +61,7 @@ docker compose up -d
 ```
 
 >[!TIP]
-> Recommended to use tunneling service like ngrok, cloudflare tunnels
-> localtunnel, localhost.run, or serveo.net for WEBHOOK_URL 
+> Recommended to use tunneling service like ngrok, cloudflare tunnels, localtunnel, localhost.run, or serveo.net for WEBHOOK_URL 
 
 ### Git clone (development)
 
