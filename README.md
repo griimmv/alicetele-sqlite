@@ -59,8 +59,7 @@ docker compose up -d
 ```
 
 >[!TIP]
-> Recommended to use tunneling service like ngrok, cloudflare tunnels
-> localtunnel, localhost.run, or serveo.net for WEBHOOK_URL 
+> Recommended to use tunneling service like ngrok, cloudflare tunnels, localtunnel, localhost.run, or serveo.net for WEBHOOK_URL 
 
 ### Git clone (development)
 
