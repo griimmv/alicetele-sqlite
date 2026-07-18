@@ -7,6 +7,7 @@ import {
   archiveSession,
   switchSession as switchDbSession,
   deleteSession as deleteDbSession,
+  renameSession,
 } from "../db/indexdb.ts";
 
 const SESSIONS_PER_PAGE = 4;
@@ -19,11 +20,22 @@ const managerMessages = new Map<number, number>();
 
 interface ManagerState {
   page: number;
-  mode: "normal" | "delete";
+  mode: "normal" | "delete" | "rename";
   text: string;
 }
 
 const states = new Map<string, ManagerState>();
+
+// Track pending rename targets (chatId → sessionId)
+const pendingRename = new Map<number, number>();
+
+export function getPendingRename(chatId: number): number | undefined {
+  return pendingRename.get(chatId);
+}
+
+export function clearPendingRename(chatId: number): void {
+  pendingRename.delete(chatId);
+}
 
 function stateKey(chatId: number, msgId: number): string {
   return `${chatId}:${msgId}`;
@@ -56,7 +68,7 @@ function buildSessionKeyboard(
   sessions: SessionRow[],
   activeId: number | null,
   rawPage: number,
-  mode: "normal" | "delete",
+  mode: "normal" | "delete" | "rename",
 ): InlineKeyboard {
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
   const page = Math.max(1, Math.min(rawPage, totalPages));
@@ -68,12 +80,20 @@ function buildSessionKeyboard(
     const label = s.id === activeId
       ? `#${s.id}: ${s.name} ✅`
       : `#${s.id}: ${s.name}`;
-    const action = mode === "delete" ? cb("delask", s.id) : cb("switch", s.id);
+    let action: string;
+    if (mode === "delete") {
+      action = cb("delask", s.id);
+    } else if (mode === "rename") {
+      action = cb("renameask", s.id);
+    } else {
+      action = cb("switch", s.id);
+    }
     kb.text(label, action).row();
   }
 
   if (mode === "normal") {
     kb.text("➕ New", cb("new"));
+    kb.text("✏️ Rename", cb("rename"));
     kb.text("🗑 Delete", cb("delete"));
     kb.text("✖ Close", cb("close"));
   } else {
@@ -140,7 +160,7 @@ async function refreshKeyboard(
   ctx: Context,
   chatId: number,
   msgId: number,
-  mode: "normal" | "delete",
+  mode: "normal" | "delete" | "rename",
   page?: number,
 ): Promise<void> {
   const sessions = await listSessions(chatId);
@@ -214,6 +234,35 @@ async function handleDelete(ctx: Context, chatId: number, msgId: number) {
   const kb = buildSessionKeyboard(sessions, active?.id ?? null, 1, "delete");
   await editManager(ctx, chatId, msgId, "Press a session to delete:", kb);
   await ctx.answerCallbackQuery();
+}
+
+async function handleRename(ctx: Context, chatId: number, msgId: number) {
+  const sessions = await listSessions(chatId);
+  const active = sessions.find(session => !session.archived);
+  const state = getState(chatId, msgId);
+  state.mode = "rename";
+  state.page = 1;
+  const kb = buildSessionKeyboard(sessions, active?.id ?? null, 1, "rename");
+  await editManager(ctx, chatId, msgId, "Press a session to rename:", kb);
+  await ctx.answerCallbackQuery();
+}
+
+async function handleRenameask(ctx: Context, chatId: number, msgId: number, sessionId: number) {
+  const session = await getSession(sessionId);
+  if (!session || session.chat_id !== chatId) {
+    await ctx.answerCallbackQuery("Session not found.");
+    return;
+  }
+  pendingRename.set(chatId, sessionId);
+  const kb = new InlineKeyboard()
+    .text("Cancel", cb("renamecancel"));
+  await editManager(ctx, chatId, msgId, `✏️ Send me the new name for "#${session.id}: ${session.name}":`, kb);
+  await ctx.answerCallbackQuery();
+}
+
+async function handleRenamecancel(ctx: Context, chatId: number, msgId: number) {
+  clearPendingRename(chatId);
+  await handleBack(ctx, chatId, msgId);
 }
 
 async function handleDelask(ctx: Context, chatId: number, msgId: number, sessionId: number) {
@@ -311,6 +360,15 @@ export function registerSessionCallbacks(bot: Bot): void {
       case "delete":
         await handleDelete(ctx, chatId, msgId);
         break;
+      case "rename":
+        await handleRename(ctx, chatId, msgId);
+        break;
+      case "renameask":
+        await handleRenameask(ctx, chatId, msgId, Number(args[0]));
+        break;
+      case "renamecancel":
+        await handleRenamecancel(ctx, chatId, msgId);
+        break;
       case "delask":
         await handleDelask(ctx, chatId, msgId, Number(args[0]));
         break;
@@ -363,4 +421,29 @@ export async function showSessionManager(ctx: Context): Promise<void> {
   managerMessages.set(chatId, sent.message_id);
   const state = getState(chatId, sent.message_id);
   state.text = text;
+}
+
+/** Complete a pending rename inline — updates the manager message. */
+export async function completeRename(ctx: Context, chatId: number, sessionId: number, name: string): Promise<void> {
+  await renameSession(sessionId, name);
+  clearPendingRename(chatId);
+
+  const sessions = await listSessions(chatId);
+  const active = sessions.find(s => !s.archived);
+  const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
+  const text = `✅ Renamed to "${name}".\n\n📂 Your sessions (1/${totalPages}):`;
+  const kb = buildSessionKeyboard(sessions, active?.id ?? null, 1, "normal");
+
+  const existing = managerMessages.get(chatId);
+  if (existing) {
+    const key = stateKey(chatId, existing);
+    states.delete(key);
+    try {
+      await ctx.api.editMessageText(chatId, existing, text, { reply_markup: kb });
+      const state = getState(chatId, existing);
+      state.text = text;
+    } catch (err) {
+      if (!isBenignEditError(err)) console.error("completeRename error:", err);
+    }
+  }
 }

@@ -4,7 +4,7 @@ import { parseJSONFromText } from "../engine/parser.ts";
 import { createLLM } from "../engine/llm.ts";
 import { getOrCreateSession, archiveSession, getSessionTurns, saveTurn, getActiveSession, renameSession, getChatMode, setChatMode } from "../db/indexdb.ts";
 import { loadConversationHistory, buildExportData } from "./session.ts";
-import { registerSessionCallbacks, showSessionManager } from "./session-handler.ts";
+import { registerSessionCallbacks, showSessionManager, getPendingRename, completeRename } from "./session-handler.ts";
 import { buildToolKeyboard, setPendingQuery, registerToolCallbacks } from "./tool-selector.ts";
 
 interface ParsedResponse {
@@ -36,8 +36,7 @@ export function registerHandlers(bot: Bot): void {
     await ctx.reply(
       "/help - Show this message\n"
       + "/end - End current session and start fresh\n"
-      + "/sessions - Manage sessions (switch, create, delete)\n"
-      + "/rename <name> - Rename the current session\n"
+      + "/sessions - Manage sessions (switch, create, rename, delete)\n"
       + "/mode [chat|tool] - Toggle between chat and tool mode\n"
       + "/tokens - Show token usage for this session\n"
       + "/export - Export current session as JSON file\n"
@@ -70,22 +69,6 @@ export function registerHandlers(bot: Bot): void {
 
   bot.command("sessions", async (ctx) => {
     await showSessionManager(ctx);
-  });
-
-  bot.command("rename", async (ctx) => {
-    const chatId = ctx.chat.id;
-    const name = ctx.match?.trim();
-    if (!name) {
-      await ctx.reply("Usage: /rename <new name>");
-      return;
-    }
-    const session = await getActiveSession(chatId);
-    if (!session) {
-      await ctx.reply("No active session to rename.");
-      return;
-    }
-    await renameSession(session.id, name);
-    await ctx.reply(`✅ Renamed to "${name}".`);
   });
 
   bot.command("tokens", async (ctx) => {
@@ -127,6 +110,16 @@ export function registerHandlers(bot: Bot): void {
   bot.on("message:text", async (ctx) => {
     const chatId = ctx.chat.id;
     const query = ctx.message.text;
+
+    // Handle pending rename — inline in the manager message
+    const pendingSessionId = getPendingRename(chatId);
+    if (pendingSessionId !== undefined) {
+      const name = query.trim();
+      if (name) {
+        await completeRename(ctx, chatId, pendingSessionId, name);
+      }
+      return;
+    }
 
     // Don't process commands (handled above)
     if (query.startsWith("/")) return;
