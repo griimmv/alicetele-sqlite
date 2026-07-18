@@ -43,12 +43,12 @@ function stateKey(chatId: number, msgId: number): string {
 
 function getState(chatId: number, msgId: number): ManagerState {
   const key = stateKey(chatId, msgId);
-  let s = states.get(key);
-  if (!s) {
-    s = { page: 1, mode: "normal", text: "" };
-    states.set(key, s);
+  let state = states.get(key);
+  if (!state) {
+    state = { page: 1, mode: "normal", text: "" };
+    states.set(key, state);
   }
-  return s;
+  return state;
 }
 
 // --- Callback-data helpers ---
@@ -76,17 +76,17 @@ function buildSessionKeyboard(
   const pageSessions = sessions.slice(start, start + SESSIONS_PER_PAGE);
   const kb = new InlineKeyboard();
 
-  for (const s of pageSessions) {
-    const label = s.id === activeId
-      ? `#${s.id}: ${s.name} ✅`
-      : `#${s.id}: ${s.name}`;
+  for (const session of pageSessions) {
+    const label = session.id === activeId
+      ? `#${session.id}: ${session.name} ✅`
+      : `#${session.id}: ${session.name}`;
     let action: string;
     if (mode === "delete") {
-      action = cb("delask", s.id);
+      action = cb("delask", session.id);
     } else if (mode === "rename") {
-      action = cb("renameask", s.id);
+      action = cb("renameask", session.id);
     } else {
-      action = cb("switch", s.id);
+      action = cb("switch", session.id);
     }
     kb.text(label, action).row();
   }
@@ -121,7 +121,7 @@ function formatTurns(turns: TurnRow[]): string {
       try {
         const sources = JSON.parse(turn.sources) as { title: string; url: string }[];
         if (sources.length > 0) {
-          sourcesText = "\n\nSources:\n" + sources.map(s => `  - ${s.title} (${s.url})`).join("\n");
+          sourcesText = "\n\nSources:\n" + sources.map(src => `  - ${src.title} (${src.url})`).join("\n");
         }
       } catch {}
     }
@@ -429,7 +429,7 @@ export async function completeRename(ctx: Context, chatId: number, sessionId: nu
   clearPendingRename(chatId);
 
   const sessions = await listSessions(chatId);
-  const active = sessions.find(s => !s.archived);
+  const active = sessions.find(session => !session.archived);
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
   const text = `✅ Renamed to "${name}".\n\n📂 Your sessions (1/${totalPages}):`;
   const kb = buildSessionKeyboard(sessions, active?.id ?? null, 1, "normal");
