@@ -314,6 +314,7 @@ async function handleBack(ctx: Context, chatId: number, msgId: number) {
 }
 
 async function handleClose(ctx: Context, chatId: number, msgId: number) {
+  clearPendingRename(chatId);
   const key = stateKey(chatId, msgId);
   states.delete(key);
   managerMessages.delete(chatId);
@@ -413,7 +414,11 @@ export async function showSessionManager(ctx: Context): Promise<void> {
       state.text = text;
       return;
     } catch (err) {
-      if (!isBenignEditError(err)) console.error("showSessionManager edit error:", err);
+      if (isBenignEditError(err)) {
+        managerMessages.delete(chatId);
+      } else {
+        console.error("showSessionManager edit error:", err);
+      }
     }
   }
 

@@ -46,7 +46,7 @@ export async function runAgent(
   signal?: AbortSignal
 ): Promise<{ content: string; tokens: TokenUsage }> {
   const messages: any[] = [...history, { role: "user", content: input }];
-  const maxLoops = 2;
+  const maxLoops = 3;
   const tokens: TokenUsage = { input: 0, output: 0, total: 0 };
 
   for (let i = 0; i < maxLoops; i++) {
