@@ -111,20 +111,20 @@ export function registerHandlers(bot: Bot): void {
     const chatId = ctx.chat.id;
     const query = ctx.message.text;
 
-    // Handle pending rename — inline in the manager message
-    const pendingSessionId = getPendingRename(chatId);
-    if (pendingSessionId !== undefined) {
-      const name = query.trim();
-      if (name) {
-        await completeRename(ctx, chatId, pendingSessionId, name);
-      }
-      return;
-    }
-
     // Don't process commands (handled above)
     if (query.startsWith("/")) return;
 
     try {
+      // Handle pending rename — inline in the manager message
+      const pendingSessionId = getPendingRename(chatId);
+      if (pendingSessionId !== undefined) {
+        const name = query.trim();
+        if (name) {
+          await completeRename(ctx, chatId, pendingSessionId, name);
+        }
+        return;
+      }
+
       const session = await getOrCreateSession(chatId);
       const history = await loadConversationHistory(session.id);
       const nextIndex = history.length / 2; // each turn = 2 messages (user + assistant)
