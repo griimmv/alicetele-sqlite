@@ -447,8 +447,18 @@ export async function completeRename(ctx: Context, chatId: number, sessionId: nu
       await ctx.api.editMessageText(chatId, existing, text, { reply_markup: kb });
       const state = getState(chatId, existing);
       state.text = text;
+      return;
     } catch (err) {
-      if (!isBenignEditError(err)) console.error("completeRename error:", err);
+      if (isBenignEditError(err)) {
+        managerMessages.delete(chatId);
+      } else {
+        console.error("completeRename error:", err);
+      }
     }
   }
+
+  const sent = await ctx.reply(text, { reply_markup: kb });
+  managerMessages.set(chatId, sent.message_id);
+  const state = getState(chatId, sent.message_id);
+  state.text = text;
 }
