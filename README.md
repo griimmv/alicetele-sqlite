@@ -207,7 +207,6 @@ sessions: id | name | chat_id | archived | mode | created_at
 | `/help` | Show available commands |
 | `/mode [chat\|tool]` | Toggle between chat (LLM-decides) and tool (manual pick) mode |
 | `/sessions` | Switch, rename, or delete sessions |
-| `/rename <name>` | Rename the current session |
 | `/end` | Archive current session and start a fresh one |
 | `/tokens` | Show input, output, and total token usage for the current session |
 | `/export` | Export current session history as a JSON file. |
