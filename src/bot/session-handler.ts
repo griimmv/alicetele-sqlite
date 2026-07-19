@@ -26,15 +26,27 @@ interface ManagerState {
 
 const states = new Map<string, ManagerState>();
 
-// Track pending rename targets (chatId → sessionId)
-const pendingRename = new Map<number, number>();
+// Track pending rename targets (chatId:fromId → sessionId)
+const pendingRename = new Map<string, number>();
 
-export function getPendingRename(chatId: number): number | undefined {
-  return pendingRename.get(chatId);
+function pendingRenameKey(chatId: number, fromId: number): string {
+  return `${chatId}:${fromId}`;
 }
 
-export function clearPendingRename(chatId: number): void {
-  pendingRename.delete(chatId);
+export function getPendingRename(chatId: number, fromId?: number): number | undefined {
+  if (fromId === undefined) return undefined;
+  return pendingRename.get(pendingRenameKey(chatId, fromId));
+}
+
+export function clearPendingRename(chatId: number, fromId?: number): void {
+  if (fromId !== undefined) {
+    pendingRename.delete(pendingRenameKey(chatId, fromId));
+  } else {
+    const prefix = `${chatId}:`;
+    for (const key of pendingRename.keys()) {
+      if (key.startsWith(prefix)) pendingRename.delete(key);
+    }
+  }
 }
 
 function stateKey(chatId: number, msgId: number): string {
@@ -253,7 +265,7 @@ async function handleRenameask(ctx: Context, chatId: number, msgId: number, sess
     await ctx.answerCallbackQuery("Session not found.");
     return;
   }
-  pendingRename.set(chatId, sessionId);
+  pendingRename.set(pendingRenameKey(chatId, ctx.callbackQuery.from.id), sessionId);
   const kb = new InlineKeyboard()
     .text("Cancel", cb("renamecancel"));
   await editManager(ctx, chatId, msgId, `✏️ Send me the new name for "#${session.id}: ${session.name}":`, kb);
@@ -261,7 +273,7 @@ async function handleRenameask(ctx: Context, chatId: number, msgId: number, sess
 }
 
 async function handleRenamecancel(ctx: Context, chatId: number, msgId: number) {
-  clearPendingRename(chatId);
+  clearPendingRename(chatId, ctx.callbackQuery.from.id);
   await handleBack(ctx, chatId, msgId);
 }
 
@@ -314,7 +326,7 @@ async function handleBack(ctx: Context, chatId: number, msgId: number) {
 }
 
 async function handleClose(ctx: Context, chatId: number, msgId: number) {
-  clearPendingRename(chatId);
+  clearPendingRename(chatId, ctx.callbackQuery.from.id);
   const key = stateKey(chatId, msgId);
   states.delete(key);
   managerMessages.delete(chatId);
@@ -431,7 +443,7 @@ export async function showSessionManager(ctx: Context): Promise<void> {
 /** Complete a pending rename inline — updates the manager message. */
 export async function completeRename(ctx: Context, chatId: number, sessionId: number, name: string): Promise<void> {
   await renameSession(sessionId, name);
-  clearPendingRename(chatId);
+  clearPendingRename(chatId, ctx.from?.id);
 
   const sessions = await listSessions(chatId);
   const active = sessions.find(session => !session.archived);

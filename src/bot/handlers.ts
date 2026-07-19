@@ -116,7 +116,7 @@ export function registerHandlers(bot: Bot): void {
 
     try {
       // Handle pending rename — inline in the manager message
-      const pendingSessionId = getPendingRename(chatId);
+      const pendingSessionId = getPendingRename(chatId, ctx.from?.id);
       if (pendingSessionId !== undefined) {
         const name = query.trim();
         if (name) {
