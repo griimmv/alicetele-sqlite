@@ -408,6 +408,8 @@ export async function showSessionManager(ctx: Context): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
 
+  clearPendingRename(chatId);
+
   const sessions = await listSessions(chatId);
   const active = sessions.find(session => !session.archived);
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
